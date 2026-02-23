@@ -1,0 +1,175 @@
+﻿@{
+    ViewData["Title"] = "Sales Order";
+    Layout = "_LayoutDashboard";
+}
+
+
+<div class="dashboard">
+
+    <!-- HEADER -->
+    <div class="overview-header">
+
+        <div>
+            <h1>Sales Orders</h1>
+            <p class="overview-sub">
+                Manage customer orders and shipments
+            </p>
+        </div>
+
+        <div class="overview-actions">
+            <button class="btn-outline"><i class="bi bi-file-earmark-fill"></i> Export Report</button>
+            <button class="btn-primary"><i class="bi bi-plus-square-fill"></i> Add Sales Order</button>
+        </div>
+
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+
+        <div class="filter-group">
+            <label>Status</label>
+            <select class="filter-input">
+                <option>All Statuses</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label>Date</label>
+            <select class="filter-input">
+                <option>dd/mm/yy</option>
+            </select>
+        </div>
+
+
+        <div class="filter-group mt-2">
+            <button class="btn-primary-small">Apply Filters</button>
+        </div>
+
+    </div>
+
+
+
+    <!-- LOWER SECTION -->
+    <div class="lower-grid-inv">
+
+        <!-- INVENTORY TABLE -->
+        <div class="table-card-big">
+
+            <div class="table-header">
+                <h3>Inventory Items</h3>
+                <span class="view-all">View All</span>
+            </div>
+
+            <div class="table-responsive">
+                <table class="inventory-table">
+                    <thead>
+                        <tr>
+                            
+                            <th>Order #</th>
+                            <th>Customer</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Total</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        <tr>
+                            
+                            <td>SO-2025-089</td>
+                            <td>Kathryn Bernardo</td>'
+                            <td>Oct 20, 2025</td>'
+                            <td><span class="status in">In Stock</span></td>
+                            <td>₱100,000</td>
+                            <td class="actions">
+                                <i class="bi bi-pencil"></i>
+                                <i class="bi bi-trash"></i>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>SO-2025-090</td>
+                            <td>Gar Flores</td>'
+                            <td>Oct 23, 2025</td>'
+                            <td><span class="status in">In Stock</span></td>
+                            <td>₱50,000</td>
+                            <td class="actions">
+                                <i class="bi bi-pencil"></i>
+                                <i class="bi bi-trash"></i>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>SO-2025-091</td>
+                            <td>Princess Angel Nieves</td>'
+                            <td>Oct 28, 2025</td>'
+                            <td><span class="status in">In Stock</span></td>
+                            <td>₱70,000</td>
+                            <td class="actions">
+                                <i class="bi bi-pencil"></i>
+                                <i class="bi bi-trash"></i>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>SO-2025-092</td>
+                            <td>Julia Montes</td>'
+                            <td>Oct 29, 2025</td>'
+                            <td><span class="status in">In Stock</span></td>
+                            <td>₱100,000</td>
+                            <td class="actions">
+                                <i class="bi bi-pencil"></i>
+                                <i class="bi bi-trash"></i>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>SO-2025-093</td>
+                            <td>Kathryn Bernardo</td>'
+                            <td>Oct 29, 2025</td>'
+                            <td><span class="status in">In Stock</span></td>
+                            <td>₱500,000</td>
+                            <td class="actions">
+                                <i class="bi bi-pencil"></i>
+                                <i class="bi bi-trash"></i>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>SO-2025-094</td>
+                            <td>Minatozaki Sana</td>'
+                            <td>Oct 31, 2025</td>'
+                            <td><span class="status in">In Stock</span></td>
+                            <td>₱100,000</td>
+                            <td class="actions">
+                                <i class="bi bi-pencil"></i>
+                                <i class="bi bi-trash"></i>
+                            </td>
+                        </tr>
+
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- TABLE FOOTER -->
+            <div class="table-footer">
+                <div>Showing 1–6 of 24 Sales Order</div>
+
+                <div class="pagination">
+                    <button class="page-btn">‹</button>
+                    <button class="page-btn active">1</button>
+                    <button class="page-btn">2</button>
+                    <button class="page-btn">3</button>
+                    <button class="page-btn">4</button>
+                    <button class="page-btn">5</button>
+                    <button class="page-btn">›</button>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

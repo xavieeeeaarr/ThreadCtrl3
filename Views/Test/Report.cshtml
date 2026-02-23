@@ -1,0 +1,158 @@
+﻿@{
+    ViewData["Title"] = "Reports & Valuation";
+    Layout = "_LayoutDashboard";
+}
+
+
+<div class="dashboard">
+
+    <!-- HEADER -->
+    <div class="overview-header">
+
+        <div>
+            <h1>Inventory Valuation Reports</h1>
+            <p class="overview-sub">
+                Real-time cost analysis and asset value tracking
+            </p>
+        </div>
+
+        <div class="overview-actions">
+            <button class="btn-outline"><i class="bi bi-box-fill"></i> Product Catalog</button>
+            <button class="btn-outline"><i class="bi bi-printer-fill"></i> Print</button>
+            <button class="btn-outline"><i class="bi bi-file-earmark-spreadsheet-fill"></i> Export Excel</button>
+            <button class="btn-primary"><i class="bi bi-file-earmark-fill"></i> Generate PDF</button>
+        </div>
+
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+
+        <div class="filter-group">
+            <label>Date Range</label>
+            <input type="text" value="Oct 01, 2024 - Oct 31, 2024" class="filter-input" />
+        </div>
+
+        <div class="filter-group">
+            <label>Warehouse</label>
+            <select class="filter-input">
+                <option>All Warehouses</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label>Category</label>
+            <select class="filter-input">
+                <option>All Categories</option>
+            </select>
+        </div>
+
+        <div class="filter-group mt-2">
+            <button class="btn-primary-small">Apply Filters</button>
+        </div>
+
+    </div>
+
+
+    <!-- CARDS BELOW -->
+    <div class="cards-grid">
+
+        <div class="card">
+            <div class="stat-label">Total Asset Value</div>
+            <div class="stat-value">₱1,240,500</div>
+            <div class="stat-label"><i class="bi bi-arrow-up-right"></i> +5.2% vs last month</div>
+        </div>
+
+        <div class="card">
+            <div class="stat-label">Avg. Unit Cost</div>
+            <div class="stat-value">₱24.50</div>
+            <div class="stat-label">Stable</div>
+        </div>
+
+        <div class="card">
+            <div class="stat-label">Total SKUs</div>
+            <div class="stat-value">845</div>
+            <div class="stat-label">+12 New this week</div>
+        </div>
+
+        <div class="card">
+            <div class="stat-label">Top Category Value</div>
+            <div class="stat-value">₱450</div>
+            <div class="stat-label">Shirt</div>
+        </div>
+
+    </div>
+    <!-- LOWER SECTION -->
+    <div class="lower-grid">
+
+        <!-- RECENT STOCK MOVEMENTS -->
+        <div class="table-card">
+
+            <div class="table-header">
+                <h3>Recent Stock Movements</h3>
+                <span class="view-all">View All</span>
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Transaction ID</th>
+                            <th>Type</th>
+                            <th>Product / Variant</th>
+                            <th>Quantity</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <tr>
+                            <td>#TRX-9921</td>
+                            <td>Sales Order</td>
+                            <td>Cotton T-Shirt</td>
+                            <td class="negative">-50</td>
+                            <td>Oct 24, 10:30 AM</td>
+                            <td><span class="status completed">Completed</span></td>
+                        </tr>
+
+                        <tr>
+                            <td>#TRX-9922</td>
+                            <td>Procurement</td>
+                            <td>Denim Jeans</td>
+                            <td class="positive">+200</td>
+                            <td>Oct 24, 09:15 AM</td>
+                            <td><span class="status received">Received</span></td>
+                        </tr>
+
+                        <tr>
+                            <td>#TRX-9919</td>
+                            <td>Adjustment</td>
+                            <td>Silk Scarf</td>
+                            <td class="negative">-2</td>
+                            <td>Oct 23, 04:45 PM</td>
+                            <td><span class="status pending">Pending</span></td>
+                        </tr>
+
+                        <tr>
+                            <td>#TRX-9918</td>
+                            <td>Sales Order</td>
+                            <td>Winter Jacket</td>
+                            <td class="negative">-1</td>
+                            <td>Oct 23, 02:20 PM</td>
+                            <td><span class="status completed">Completed</span></td>
+                        </tr>
+
+                    </tbody>
+
+                </table>
+            </div>
+
+        </div>
+
+        
+
+    </div>
+
+
+</div>

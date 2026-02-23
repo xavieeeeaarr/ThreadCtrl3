@@ -1,0 +1,171 @@
+﻿@{
+    ViewData["Title"] = "Stock Adjustements";
+    Layout = "_LayoutDashboard";
+}
+
+
+<div class="dashboard">
+
+    <!-- HEADER -->
+    <div class="overview-header">
+
+        <div>
+            <h1>Stock Adjustments</h1>
+            <p class="overview-sub">
+                Manage inventory corrections, damages, and write-offs.
+            </p>
+        </div>
+
+        <div class="overview-actions">
+            <button class="btn-outline">
+                <i class="bi bi-file-earmark-fill"></i> Adjustment Log
+                <button class="btn-primary"><i class="bi bi-plus-square-fill"></i> New Adjustment Request</button>
+            </button>
+        </div>
+
+    </div>
+
+    <!-- TABS -->
+    <div class="proc-tabs">
+        <span class="active-tab">All Adjustments</span>
+        <span>Pending Approval</span>
+        <span>Rejected</span>
+    </div>
+
+
+    <!-- CARDS BELOW -->
+    <div class="cards-grid">
+
+        <div class="card">
+            <div class="stat-label">Pending Approval</div>
+            <div class="stat-value">5</div>
+            <div class="stat-label">Action Required</div>
+
+        </div>
+
+        <div class="card">
+            <div class="stat-label">Damages (This Month)</div>
+            <div class="stat-value">-124</div>
+            <div class="stat-label">Units removed</div>
+        </div>
+
+        <div class="card">
+            <div class="stat-label">Corrections (Net)</div>
+            <div class="stat-value">+45</div>
+            <div class="stat-label">Audit findings</div>
+        </div>
+
+
+
+    </div>
+
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+
+        <div class="filter-group">
+            <label>Types</label>
+            <select class="filter-input">
+                <option>All Types</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label>Stock Status</label>
+            <select class="filter-input">
+                <option>All Statuses</option>
+            </select>
+        </div>
+
+
+        <div class="filter-group mt-2">
+            <button class="btn-primary-small">Apply Filters</button>
+        </div>
+
+    </div>
+
+    <!-- LOWER SECTION -->
+    <div class="lower-grid-inv">
+
+        <div class="table-card-big">
+
+            <div class="table-responsive">
+                <table class="inventory-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Product Variant</th>
+                            <th>Type</th>
+                            <th>Change</th>
+                            <th>Requested By</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        <tr>
+                            <td>ADJ-9021</td>
+                            <td>Cotton Cre Neck - White/L</td>
+                            <td><span class="status-red">Damage</span></td>
+                            <td>-12</td>
+                            <td>Mike Ross</td>
+                            <td><span class="status pending">Pending</span></td>
+                            <td>10/2/2025</td>
+                            
+                        </tr>
+
+                        <tr>
+                            <td>ADJ-9021</td>
+                            <td>Cotton Cre Neck - White/L</td>
+                            <td><span class="status-red">Damage</span></td>
+                            <td>-12</td>
+                            <td>Mike Ross</td>
+                            <td><span class="status pending">Pending</span></td>
+                            <td>10/2/2025</td>
+                        </tr>
+
+                        <tr>
+                            <td>ADJ-9021</td>
+                            <td>Cotton Cre Neck - White/L</td>
+                            <td><span class="status-red">Damage</span></td>
+                            <td>-12</td>
+                            <td>Mike Ross</td>
+                            <td><span class="status pending">Pending</span></td>
+                            <td>10/2/2025</td>
+                        </tr>
+
+                        <tr>
+                            <td>ADJ-9021</td>
+                            <td>Cotton Cre Neck - White/L</td>
+                            <td><span class="status-red">Damage</span></td>
+                            <td>-12</td>
+                            <td>Mike Ross</td>
+                            <td><span class="status pending">Pending</span></td>
+                            <td>10/2/2025</td>
+                        </tr>
+
+                    </tbody>
+                </table>
+            </div>
+            <!-- TABLE FOOTER -->
+            <div class="table-footer">
+                <div>Showing 1–6 of 24 Stock Adjustments</div>
+
+                <div class="pagination">
+                    <button class="page-btn">‹</button>
+                    <button class="page-btn active">1</button>
+                    <button class="page-btn">2</button>
+                    <button class="page-btn">3</button>
+                    <button class="page-btn">4</button>
+                    <button class="page-btn">5</button>
+                    <button class="page-btn">›</button>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

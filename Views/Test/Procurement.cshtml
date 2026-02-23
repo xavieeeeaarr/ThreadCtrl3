@@ -1,0 +1,173 @@
+﻿@{
+    ViewData["Title"] = "Procurement";
+    Layout = "_LayoutDashboard";
+}
+
+<div class="dashboard">
+
+    <!-- HEADER -->
+    <div class="overview-header">
+
+        <div>
+            <h1>Procurement</h1>
+            <p class="overview-sub">
+                Manage suppliers and purchase orders
+            </p>
+        </div>
+
+        <div class="overview-actions">
+            <div class="btn-outline">
+                <i class="bi bi-file-earmark-fill"></i> Export Report
+            </div>
+            <button class="btn-primary"><i class="bi bi-plus-square-fill"></i> New Purchase Order</button>
+        </div>
+
+    </div>
+
+    <!-- TABS -->
+    <div class="proc-tabs">
+        <span class="active-tab">Purchase Orders</span>
+        <span>Suppliers</span>
+        <span>Reorder Alerts</span>
+    </div>
+
+
+    <!-- CARDS BELOW -->
+    <div class="cards-grid">
+
+        <div class="card">
+            <div class="stat-label">Pending Approval</div>
+            <div class="stat-value">3</div>
+            <div class="stat-label">Waiting review</div>
+
+        </div>
+
+        <div class="card">
+            <div class="stat-label">Receiving Due</div>
+            <div class="stat-value">8</div>
+            <div class="stat-label">Expected this week</div>
+        </div>
+
+        <div class="card">
+            <div class="stat-label">Active Suppliers</div>
+            <div class="stat-value">24</div>
+            <div class="stat-label">Total Partner</div>
+        </div>
+
+      
+
+    </div>
+    
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+
+        <div class="filter-group">
+            <select class="filter-input">
+                <option>All Statuses</option>
+                <option>Pending</option>
+                <option>Ordered</option>
+                <option>Delayed</option>
+                <option>Received</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <select class="filter-input">
+                <option>All Suppliers</option>
+            </select>
+        </div>
+
+        <div class="filter-group mt-2">
+            <button class="btn-primary-small">Apply Filters</button>
+        </div>
+
+    </div>
+
+    <!-- LOWER SECTION -->
+    <div class="lower-grid-inv">
+
+        <div class="table-card-big">
+
+            <div class="table-responsive">
+                <table class="inventory-table">
+                    <thead>
+                        <tr>
+                            <th>PO #</th>
+                            <th>Supplier</th>
+                            <th>Order Date</th>
+                            <th>Status</th>
+                            <th>Total Cost</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        <tr>
+                            <td>PO-2024-105</td>
+                            <td>FabriWorld Inc</td>
+                            <td>Oct 26, 2024</td>
+                            <td><span class="status pending">Pending</span></td>
+                            <td>₱4,500.00</td>
+                            <td class="actions">
+                                <i class="bi bi-three-dots"></i>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>PO-2024-104</td>
+                            <td>Denim Suppliers Ltd</td>
+                            <td>Oct 24, 2024</td>
+                            <td><span class="status ordered">Ordered</span></td>
+                            <td>₱2,100.50</td>
+                            <td class="actions">
+                                <i class="bi bi-three-dots"></i>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>PO-2024-103</td>
+                            <td>Global Textiles Co.</td>
+                            <td>Oct 22, 2024</td>
+                            <td><span class="status delayed">Delayed</span></td>
+                            <td>₱8,950.00</td>
+                            <td class="actions">
+                                <i class="bi bi-three-dots"></i>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>PO-2024-102</td>
+                            <td>Button & Zip Masters</td>
+                            <td>Oct 20, 2024</td>
+                            <td><span class="status received">Received</span></td>
+                            <td>₱450.00</td>
+                            <td class="actions">
+                                <i class="bi bi-three-dots"></i>
+                            </td>
+                        </tr>
+
+                    </tbody>
+                </table>
+            </div>
+            <!-- TABLE FOOTER -->
+            <div class="table-footer">
+                <div>Showing 1–6 of 24 suppliers</div>
+
+                <div class="pagination">
+                    <button class="page-btn">‹</button>
+                    <button class="page-btn active">1</button>
+                    <button class="page-btn">2</button>
+                    <button class="page-btn">3</button>
+                    <button class="page-btn">4</button>
+                    <button class="page-btn">5</button>
+                    <button class="page-btn">›</button>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

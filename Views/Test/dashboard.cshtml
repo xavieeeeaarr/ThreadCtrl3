@@ -1,0 +1,136 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "_LayoutDashboard";
+}
+
+<script src="https://code.iconify.design/iconify-icon/3.0.0/iconify-icon.min.js"></script>
+
+
+
+<div class="dashboard">
+
+    <!-- HEADER -->
+    <div class="overview-header">
+
+        <div>
+            <h1>System Overview</h1>
+            <p class="overview-sub">
+                Real-time insights for ThreadCtrl inventory operations.
+            </p>
+        </div>
+
+        <div class="overview-actions">
+            <button class="btn-outline"><i class="bi bi-file-earmark-fill"></i> Export Report</button>
+            <button class="btn-primary"><i class="bi bi-wrench-adjustable"></i> Quick Stock Adjustment</button>
+        </div>
+
+    </div>
+
+   
+    <!-- CARDS BELOW -->
+    <div class="cards-grid">
+
+        <div class="card">
+            <div class="stat-label">Total Inventory Value</div>
+            <div class="stat-value">₱1,245,890</div>
+        </div>
+
+        <div class="card">
+            <div class="stat-label">Low Stock Alerts</div>
+            <div class="stat-value">12 Items</div>
+        </div>
+
+        <div class="card">
+            <div class="stat-label">Active Sales Orders</div>
+            <div class="stat-value">48 Orders</div>
+        </div>
+
+        <div class="card">
+            <div class="stat-label">Pending Adjustments</div>
+            <div class="stat-value">5 Pending</div>
+        </div>
+
+    </div>
+    <!-- LOWER SECTION -->
+    <div class="lower-grid">
+
+        <!-- RECENT STOCK MOVEMENTS -->
+        <div class="table-card">
+
+            <div class="table-header">
+                <h3>Recent Stock Movements</h3>
+                <span class="view-all">View All</span>
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Transaction ID</th>
+                            <th>Type</th>
+                            <th>Product / Variant</th>
+                            <th>Quantity</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <tr>
+                            <td>#TRX-9921</td>
+                            <td>Sales Order</td>
+                            <td>Cotton T-Shirt</td>
+                            <td class="negative">-50</td>
+                            <td>Oct 24, 10:30 AM</td>
+                            <td><span class="status completed">Completed</span></td>
+                        </tr>
+
+                        <tr>
+                            <td>#TRX-9922</td>
+                            <td>Procurement</td>
+                            <td>Denim Jeans</td>
+                            <td class="positive">+200</td>
+                            <td>Oct 24, 09:15 AM</td>
+                            <td><span class="status received">Received</span></td>
+                        </tr>
+
+                        <tr>
+                            <td>#TRX-9919</td>
+                            <td>Adjustment</td>
+                            <td>Silk Scarf</td>
+                            <td class="negative">-2</td>
+                            <td>Oct 23, 04:45 PM</td>
+                            <td><span class="status pending">Pending</span></td>
+                        </tr>
+
+                        <tr>
+                            <td>#TRX-9918</td>
+                            <td>Sales Order</td>
+                            <td>Winter Jacket</td>
+                            <td class="negative">-1</td>
+                            <td>Oct 23, 02:20 PM</td>
+                            <td><span class="status completed">Completed</span></td>
+                        </tr>
+
+                    </tbody>
+
+                </table>
+            </div>
+
+        </div>
+
+        <!-- SYSTEM HEALTH -->
+        <div class="health-card">
+
+            <h3>System Health & Security</h3>
+
+            <p>Database Status <span>Online</span></p>
+            <p>API Gateway <span>Operational</span></p>
+            <p>Last Backup <small>6 hours ago</small></p>
+            <p>Latest Audit Logs <small>2 mins ago</small></p>
+
+        </div>
+
+    </div>
+
+</div>

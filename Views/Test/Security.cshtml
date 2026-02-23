@@ -1,0 +1,163 @@
+﻿@{
+    ViewData["Title"] = "Security & Audit";
+    Layout = "_LayoutDashboard";
+}
+
+
+
+<div class="dashboard">
+
+    <!-- HEADER -->
+    <div class="overview-header">
+
+        <div>
+            <h1>Security & Audit Monitoring</h1>
+            <p class="overview-sub">
+                Track user activities, system changes, and security events.
+            </p>
+        </div>
+        <div class="overview-actions">
+            <button class="btn-outline"><i class="bi bi-file-earmark-fill"></i> Export Logs</button>
+            <button class="btn-primary"><i class="bi bi-arrow-clockwise"></i> Refresh Data</button>
+        </div>
+
+    </div>
+
+
+    <!-- CARDS BELOW -->
+    <div class="cards-grid">
+
+        <div class="card">
+            <div class="stat-label">Failed Logins (24v)</div>
+            <div class="stat-value">12</div>
+            <div class="stat-label"><i class="bi bi-file-earmark-spreadsheet-fill"></i>+3 from yesterday</div>
+
+        </div>
+
+        <div class="card">
+            <div class="stat-label">Active Session</div>
+            <div class="stat-value">8</div>
+            <div class="stat-label">Stable</div>
+        </div>
+
+        <div class="card">
+            <div class="stat-label">Data Modification</div>
+            <div class="stat-value">145</div>
+            <div class="stat-label"><i class="bi bi-arrow-down-left"></i>-12% average volume</div>
+        </div>
+
+        <div class="card">
+            <div class="stat-label">Security Alerts</div>
+            <div class="stat-value">2</div>
+            <div class="stat-label">Critical Events</div>
+        </div>
+
+
+    </div>
+
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+
+        <div class="filter-group">
+            <label>User</label>
+            <select class="filter-input">
+                <option>All Users</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label>Module</label>
+            <select class="filter-input">
+                <option>All Modules</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Date Range</label>
+            <select class="filter-input">
+                <option>dd/mm/yyyy</option>
+            </select>
+        </div>
+
+
+        <div class="filter-group mt-2">
+            <button class="btn-primary-small">Apply Filters</button>
+        </div>
+
+    </div>
+
+    <!-- LOWER SECTION -->
+    <div class="lower-grid-inv">
+
+        <div class="table-card-big">
+
+            <div class="table-responsive">
+                <table class="inventory-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>User</th>
+                            <th>Action</th>
+                            <th>Module</th>
+                            <th>Details (Old → New)</th>
+                            <th>IP Adress</th>
+
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        <tr>
+                            <td>Oct 26, 14:32:01</td>
+                            <td>Fhiona Domini</td>
+                            <td>Stock Adjustment</td>
+                            <td><span class="status-green">Super Admin</span></td>
+                            <td>QTY: 50 → 45 (Reason: Damage)</span></td>
+                            <td>192.168.1.101</td>
+
+                        </tr>
+
+                        <tr>
+                            <td>Oct 26, 14:36:01</td>
+                            <td>Armin Golilat</td>
+                            <td>Stock Adjustment</td>
+                            <td><span class="status-green">Super Admin</span></td>
+                            <td>QTY: 50 → 45 (Reason: Damage)</span></td>
+                            <td>192.168.1.102</td>
+                        </tr>
+
+                        <tr>
+                            <td>Oct 26, 14:32:01</td>
+                            <td>Fhiona Domini</td>
+                            <td>Stock Adjustment</td>
+                            <td><span class="status-green">Super Admin</span></td>
+                            <td>QTY: 50 → 45 (Reason: Damage)</span></td>
+                            <td>192.168.1.101</td>
+                        </tr>
+
+
+
+                    </tbody>
+                </table>
+            </div>
+            <!-- TABLE FOOTER -->
+            <div class="table-footer">
+                <div>Showing 1–6 of 24 Users</div>
+
+                <div class="pagination">
+                    <button class="page-btn">‹</button>
+                    <button class="page-btn active">1</button>
+                    <button class="page-btn">2</button>
+                    <button class="page-btn">3</button>
+                    <button class="page-btn">4</button>
+                    <button class="page-btn">5</button>
+                    <button class="page-btn">›</button>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+

@@ -1,0 +1,230 @@
+﻿@{
+    ViewData["Title"] = "Inventory";
+    Layout = "_LayoutDashboard";
+}
+
+
+<div class="dashboard">
+
+    <!-- HEADER -->
+    <div class="overview-header">
+
+        <div>
+            <h1>Inventory Management</h1>
+            <p class="overview-sub">
+                Track stock levels, variants, and warehouse distribution.
+            </p>
+        </div>
+
+        <div class="overview-actions">
+            <button class="btn-outline"><i class="bi bi-suitcase-lg-fill"></i> Transfer Stock</button>
+            <button class="btn-outline"><i class="bi bi-wrench-adjustable"></i> Stock Adjustment</button>
+            <button class="btn-primary"><i class="bi bi-plus-square-fill"></i> New Product</button>
+        </div>
+
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+
+        <div class="filter-group">
+            <label>Warehouse</label>
+            <select class="filter-input">
+                <option>All Warehouses</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label>Category</label>
+            <select class="filter-input">
+                <option>All Category</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label>Stock Status</label>
+            <select class="filter-input">
+                <option>All Statuses</option>
+            </select>
+        </div>
+
+        <div class="filter-group mt-2">
+            <button class="btn-primary-small">Apply Filters</button>
+        </div>
+
+    </div>
+
+
+   
+    <!-- LOWER SECTION -->
+    <div class="lower-grid-inv">
+
+        <!-- INVENTORY TABLE -->
+        <div class="table-card-big">
+
+            <div class="table-header">
+                <h3>Inventory Items</h3>
+                <span class="view-all">View All</span>
+            </div>
+
+            <div class="table-responsive">
+                <table class="inventory-table">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" /></th>
+                            <th>Product Details</th>
+                            <th>Category</th>
+                            <th>Price</th>
+                            <th>Inventory</th>
+                            <th>Status</th>
+                            <th>Last Updated</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        <tr>
+                            <td><input type="checkbox" /></td>
+                            <td class="product-cell">
+                                <img src="/images/products/jacket.png" class="product-img">
+                                <div>
+                                    <div class="product-name">Premium Denim Jacket</div>
+                                    <div class="sku">SKU: JKT-DNM-001</div>
+                                </div>
+                            </td>
+                            <td>Apparel</td>
+                            <td>$45.00</td>
+                            <td>150</td>
+                            <td><span class="status in">In Stock</span></td>
+                            <td>Oct 20, 2024</td>
+                            <td class="actions">
+                                <i class="bi bi-pencil"></i>
+                                <i class="bi bi-trash"></i>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td><input type="checkbox" /></td>
+                            <td class="product-cell">
+                                <img src="/images/products/boots.png" class="product-img">
+                                <div>
+                                    <div class="product-name">Leather Chelsea Boots</div>
+                                    <div class="sku">SKU: BTS-LEA-099</div>
+                                </div>
+                            </td>
+                            <td>Footwear</td>
+                            <td>$82.50</td>
+                            <td>45</td>
+                            <td><span class="status low">Low Stock</span></td>
+                            <td>Oct 18, 2024</td>
+                            <td class="actions">
+                                <i class="bi bi-pencil"></i>
+                                <i class="bi bi-trash"></i>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td><input type="checkbox" /></td>
+                            <td class="product-cell">
+                                <img src="/images/products/shirt.png" class="product-img">
+                                <div>
+                                    <div class="product-name">Basic White T-Shirt</div>
+                                    <div class="sku">SKU: TEE-WHT-BASIC</div>
+                                </div>
+                            </td>
+                            <td>Apparel</td>
+                            <td>$6.20</td>
+                            <td>1200</td>
+                            <td><span class="status in">In Stock</span></td>
+                            <td>Oct 24, 2024</td>
+                            <td class="actions">
+                                <i class="bi bi-pencil"></i>
+                                <i class="bi bi-trash"></i>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td><input type="checkbox" /></td>
+                            <td class="product-cell">
+                                <img src="/images/products/scarf.png" class="product-img">
+                                <div>
+                                    <div class="product-name">Silk Scarf (Red)</div>
+                                    <div class="sku">SKU: ACC-SCF-RED</div>
+                                </div>
+                            </td>
+                            <td>Accessories</td>
+                            <td>$18.00</td>
+                            <td>85</td>
+                            <td><span class="status in">In Stock</span></td>
+                            <td>Oct 22, 2024</td>
+                            <td class="actions">
+                                <i class="bi bi-pencil"></i>
+                                <i class="bi bi-trash"></i>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td><input type="checkbox" /></td>
+                            <td class="product-cell">
+                                <img src="/images/products/coat.png" class="product-img">
+                                <div>
+                                    <div class="product-name">Wool Winter Coat</div>
+                                    <div class="sku">SKU: CT-WOOL-GRY</div>
+                                </div>
+                            </td>
+                            <td>Apparel</td>
+                            <td>$120.00</td>
+                            <td>0</td>
+                            <td><span class="status out">Out of Stock</span></td>
+                            <td>Sep 30, 2024</td>
+                            <td class="actions">
+                                <i class="bi bi-pencil"></i>
+                                <i class="bi bi-trash"></i>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td><input type="checkbox" /></td>
+                            <td class="product-cell">
+                                <img src="/images/products/running.png" class="product-img">
+                                <div>
+                                    <div class="product-name">Performance Running Shoes</div>
+                                    <div class="sku">SKU: SH-RUN-002</div>
+                                </div>
+                            </td>
+                            <td>Footwear</td>
+                            <td>$95.00</td>
+                            <td>25</td>
+                            <td><span class="status low">Low Stock</span></td>
+                            <td>Oct 26, 2024</td>
+                            <td class="actions">
+                                <i class="bi bi-pencil"></i>
+                                <i class="bi bi-trash"></i>
+                            </td>
+                        </tr>
+
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- TABLE FOOTER -->
+            <div class="table-footer">
+                <div>Showing 1–6 of 24 products</div>
+
+                <div class="pagination">
+                    <button class="page-btn">‹</button>
+                    <button class="page-btn active">1</button>
+                    <button class="page-btn">2</button>
+                    <button class="page-btn">3</button>
+                    <button class="page-btn">4</button>
+                    <button class="page-btn">5</button>
+                    <button class="page-btn">›</button>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

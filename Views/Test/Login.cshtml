@@ -1,0 +1,70 @@
+﻿@{
+    ViewData["Title"] = "Login";
+}
+
+
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<script src="https://code.iconify.design/iconify-icon/3.0.0/iconify-icon.min.js"></script>
+
+
+
+
+
+<div class="page-wrapper">
+    <div class="reg-container">
+        <div class="reg-card">
+
+            <div class="logo-area">
+                <div class="logo-icon">
+                    <img src="~/images/icon.png" alt="Logo" />
+                </div>
+                <div class="system-name">ThreadCtrl</div>
+                <div class="subtitle">Centralized Inventory Management System</div>
+            </div>
+
+            <form asp-action="Login" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <h1 style="color: white;" class="system-name">@ViewData["Title"] Here!</h1>
+
+                <div class="form-floating mb-3">
+                    <input type="email" name="email" class="form-control" placeholder="name@example.com" autocomplete="off" required />
+                    <label class="form-label-black"><i class="bi bi-envelope-fill"></i> Email</label>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input type="password" name="password" class="form-control" placeholder="password" autocomplete="new-password" required />
+                    <label class="form-label-black"><i class="bi bi-lock-fill"></i> Password</label>
+                </div>
+
+                <div class="checkbox mb-3">
+                    <label class="form-label">
+                        <input class="form-check-input " type="checkbox" name="rememberMe" value="true" />
+                        Remember me
+                    </label>
+                </div>
+
+                <div>
+                    <button type="submit" class="w-100 btn btn-lg btn-primary">Log In</button>
+                </div>
+
+                <div class="subtitle-link text-white mt-2">
+                    <p><a href="#">Forgot your password?</a></p>
+           
+                </div>
+
+            </form>
+
+       
+
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,67 @@
+﻿@{
+    ViewData["Title"] = "Register";
+}
+
+
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<script src="https://code.iconify.design/iconify-icon/3.0.0/iconify-icon.min.js"></script>
+
+
+
+
+
+<div class="page-wrapper ">
+    <div class="reg-container ">
+        <div class="reg-card mt-2">
+
+            <div class="logo-area">
+                <div class="logo-icon">
+                    <img src="~/images/icon.png" alt="Logo" />
+                </div>
+                <div class="system-name">ThreadCtrl</div>
+                <div class="subtitle">Centralized Inventory Management System</div>
+            </div>
+
+            <form>
+
+                <h1 style="color: white;" class="system-name">@ViewData["Title"] Here!</h1>
+
+                <div class="form-floating mb-3">
+                    <input type="email" class="form-control" placeholder="name@example.com" />
+                    <label class="form-label-black"><i class="bi bi-envelope-fill"></i> Email</label>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input type="password" class="form-control" placeholder="password" />
+                    <label class="form-label-black"><i class="bi bi-lock-fill"></i> Password</label>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input type="conpassword" class="form-control" placeholder="confirm password" />
+                    <label class="form-label-black"><i class="bi bi-lock-fill"></i> Confirm Password</label>
+                </div>
+
+         
+
+                <div>
+
+                    <a asp-controller="Test" asp-action="Login" class="w-100 btn btn-lg btn-primary">Register</a>
+                </div>
+
+                
+
+            </form>
+
+            
+
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

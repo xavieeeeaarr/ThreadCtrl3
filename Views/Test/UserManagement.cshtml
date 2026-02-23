@@ -1,0 +1,311 @@
+﻿
+@model ThrdCtrl2.Models.UserManagementViewModel
+@{
+    ViewData["Title"] = "User Management";
+    Layout = "_LayoutDashboard";
+}
+
+<div class="dashboard">
+
+    <div class="overview-header">
+        <div>
+            <h1>@ViewData["Title"]</h1>
+            <p class="overview-sub">Manage system access, roles, and user statuses.</p>
+        </div>
+        <div class="overview-actions d-flex align-items-center gap-3">
+            <div class="filter-group d-flex align-items-center gap-2">
+                <label class="text-white-50 small mb-0">Filter Status:</label>
+                <select class="form-select form-select-sm bg-dark text-white border-secondary" style="width: 130px;" onchange="window.location.href='?status=' + this.value">
+                    <option value="All" selected="@(Model.CurrentFilter == "All")">All Users</option>
+                    <option value="Active" selected="@(Model.CurrentFilter == "Active")">Active</option>
+                    <option value="Inactive" selected="@(Model.CurrentFilter == "Inactive")">Inactive</option>
+                </select>
+            </div>
+            <button type="button" class="btn btn-primary d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#newUserModal">
+                <i class="bi bi-person-plus-fill"></i> <span>New User</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="cards-grid mt-4">
+        <div class="card">
+            <div class="stat-label">Total Users</div>
+            <div class="stat-value">@Model.TotalUsers</div>
+            <div class="stat-label">System-wide</div>
+        </div>
+        <div class="card">
+            <div class="stat-label">Active Users</div>
+            <div class="stat-value text-success">@Model.ActiveUsers</div>
+            <div class="stat-label">Current access</div>
+        </div>
+        <div class="card">
+            <div class="stat-label">Inactive Users</div>
+            <div class="stat-value text-danger">@Model.InactiveUsers</div>
+            <div class="stat-label">Archived</div>
+        </div>
+    </div>
+
+    <!-- Users Table Section -->
+    <div class="table-card-big mt-4">
+        <div class="table-header">
+            <h3>System Users</h3>
+        </div>
+        <div class="table-responsive">
+            <table class="inventory-table">
+                <thead>
+                    <tr>
+                        <th>Full Name</th>
+                        <th>Email Address</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Users != null && Model.Users.Any())
+                    {
+                        @foreach (var u in Model.Users)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="product-cell">
+                                        <div class="product-name">@u.FullName</div>
+                                    </div>
+                                </td>
+                                <td>@u.Email</td>
+                                <td>
+                                    <span class="badge bg-dark border border-secondary text-light">@(u.RoleName ?? "No Role")</span>
+                                </td>
+                                <td>
+                                    @if (u.Status == "Active")
+                                    {
+                                        <span class="status-green">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-red">Inactive</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#editUserModal-@u.UserID">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </button>
+                                    @if (u.Status == "Active")
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#archiveUserModal-@u.UserID">
+                                            <i class="bi bi-archive-fill"></i>
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-4">No users found.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- New User Modal -->
+<div class="modal fade" id="newUserModal" tabindex="-1" aria-labelledby="newUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-black" id="newUserModalLabel">Create New User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-controller="Users" asp-action="Create" method="post">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label text-black">Full Name</label>
+                        <input type="text" name="FullName" class="form-control" placeholder="Enter full name" autocomplete="off" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-black">Email Address</label>
+                        <input type="email" name="Email" class="form-control" placeholder="name@example.com" autocomplete="off" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-black">Password</label>
+                        <input type="password" name="Password" class="form-control" placeholder="Create password" autocomplete="new-password" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-black">Assign Role</label>
+                        <select name="RoleID" class="form-select">
+                            @foreach (var r in Model.Roles)
+                            {
+                                <option value="@r.RoleID">@r.RoleName</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-black">Account Status</label>
+                        <select name="Status" class="form-select">
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Create User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit User Modals (moved outside table for valid HTML) -->
+@if (Model.Users != null && Model.Users.Any())
+{
+    @foreach (var u in Model.Users)
+    {
+        <div class="modal fade" id="editUserModal-@u.UserID" tabindex="-1" aria-labelledby="editUserModalLabel-@u.UserID" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-black" id="editUserModalLabel-@u.UserID">Edit User: @u.FullName</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form asp-controller="Users" asp-action="Edit" method="post">
+                        <input type="hidden" name="UserID" value="@u.UserID" />
+                        <input type="hidden" name="Password" value="@u.Password" />
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label text-black">Full Name</label>
+                                <input type="text" name="FullName" class="form-control" value="@u.FullName" required />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-black">Email</label>
+                                <input type="email" name="Email" class="form-control" value="@u.Email" required />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-black">Role</label>
+                                <select name="RoleID" class="form-select">
+                                    @foreach (var r in Model.Roles)
+                                    {
+                                        if (r.RoleID == u.RoleID)
+                                        {
+                                            <option value="@r.RoleID" selected>@r.RoleName</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@r.RoleID">@r.RoleName</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-black">Status</label>
+                                <select name="Status" class="form-select">
+                                    @if (u.Status == "Active")
+                                    {
+                                        <option value="Active" selected>Active</option>
+                                        <option value="Inactive">Inactive</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="Active">Active</option>
+                                        <option value="Inactive" selected>Inactive</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+<!-- Archive User Modals -->
+@if (Model.Users != null && Model.Users.Any())
+{
+    @foreach (var u in Model.Users)
+    {
+        @if (u.Status == "Active")
+        {
+            <div class="modal fade" id="archiveUserModal-@u.UserID" tabindex="-1" aria-labelledby="archiveUserModalLabel-@u.UserID" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title text-black" id="archiveUserModalLabel-@u.UserID">Archive User</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body text-black">
+                            Are you sure you want to archive <strong>@u.FullName</strong>? 
+                            The user status will be changed to Inactive.
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <form asp-controller="Users" asp-action="Archive" method="post">
+                                <input type="hidden" name="userId" value="@u.UserID" />
+                                <button type="submit" class="btn btn-warning">Yes, Archive</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+}
+
+<style>
+    /* Ensure modal text is readable */
+    .modal-title, .form-label {
+        color: #333 !important;
+    }
+    
+    .table-card-big {
+        background: #1a1a1a;
+        padding: 24px;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+        border: 1px solid #333;
+        color: #ffffff;
+    }
+
+    .inventory-table thead {
+        background: #2a2a2a;
+    }
+
+    .inventory-table th {
+        color: #a0a0a0;
+        border-bottom: 1px solid #333;
+    }
+
+    .inventory-table td {
+        border-bottom: 1px solid #333;
+        color: #e0e0e0;
+    }
+
+    .status-green {
+        background: #dcfce7;
+        color: #166534;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .status-red {
+        background: #fee2e2;
+        color: #991b1b;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+</style>
+
