@@ -25,33 +25,43 @@
                 <div class="subtitle">Centralized Inventory Management System</div>
             </div>
 
-            <form>
+            <form asp-action="Register" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
                 <h1 style="color: white;" class="system-name">@ViewData["Title"] Here!</h1>
 
                 <div class="form-floating mb-3">
-                    <input type="email" class="form-control" placeholder="name@example.com" />
+                    <input type="text" name="companyName" class="form-control" placeholder="Name of The Company" required />
+                    <label class="form-label-black"><i class="bi bi-building"></i> Name of The Company</label>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input type="text" name="fullName" class="form-control" placeholder="Full Name" required />
+                    <label class="form-label-black"><i class="bi bi-person-fill"></i> Full Name</label>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input type="email" name="email" class="form-control" placeholder="name@example.com" required />
                     <label class="form-label-black"><i class="bi bi-envelope-fill"></i> Email</label>
                 </div>
 
                 <div class="form-floating mb-3">
-                    <input type="password" class="form-control" placeholder="password" />
+                    <input type="password" name="password" class="form-control" placeholder="password" autocomplete="new-password" required />
                     <label class="form-label-black"><i class="bi bi-lock-fill"></i> Password</label>
                 </div>
 
                 <div class="form-floating mb-3">
-                    <input type="conpassword" class="form-control" placeholder="confirm password" />
+                    <input type="password" name="confirmPassword" class="form-control" placeholder="confirm password" autocomplete="new-password" required />
                     <label class="form-label-black"><i class="bi bi-lock-fill"></i> Confirm Password</label>
                 </div>
 
-         
-
                 <div>
-
-                    <a asp-controller="Test" asp-action="Login" class="w-100 btn btn-lg btn-primary">Register</a>
+                    <button type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
                 </div>
 
-                
+                <div class="subtitle-link text-white mt-2 text-center">
+                    <p>already have an account? <a asp-action="Login" class="text-primary fw-bold">log in here</a></p>
+                </div>
 
             </form>
 

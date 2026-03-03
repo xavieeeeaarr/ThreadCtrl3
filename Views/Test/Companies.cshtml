@@ -1,0 +1,126 @@
+@model ThrdCtrl2.Models.CompanyManagementViewModel
+@{
+    ViewData["Title"] = "Company Management";
+    Layout = "_LayoutSuperAdmin";
+}
+
+<div class="dashboard">
+
+    <div class="overview-header">
+        <div>
+            <h1>@ViewData["Title"]</h1>
+            <p class="overview-sub">Manage organizations and their subscription status.</p>
+        </div>
+        <div class="overview-actions d-flex align-items-center gap-3">
+            <div class="filter-group d-flex align-items-center gap-2">
+                <label class="text-white-50 small mb-0">Filter:</label>
+                <select class="form-select form-select-sm bg-dark text-white border-secondary" style="width: 150px;" onchange="window.location.href='?status=' + this.value">
+                    <option value="All" selected="@(Model.CurrentFilter == "All")">All Companies</option>
+                    <option value="Active" selected="@(Model.CurrentFilter == "Active")">Active Only</option>
+                    <option value="Inactive" selected="@(Model.CurrentFilter == "Inactive")">Inactive Only</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="cards-grid mt-4">
+        <div class="card">
+            <div class="stat-label">Total Companies</div>
+            <div class="stat-value">@Model.TotalCompanies</div>
+            <div class="stat-label">Platform-wide</div>
+        </div>
+        <div class="card">
+            <div class="stat-label">Active Companies</div>
+            <div class="stat-value text-success">@Model.ActiveCompanies</div>
+            <div class="stat-label">Current active</div>
+        </div>
+        <div class="card">
+            <div class="stat-label">Inactive Companies</div>
+            <div class="stat-value text-danger">@Model.InactiveCompanies</div>
+            <div class="stat-label">Archived</div>
+        </div>
+    </div>
+
+    <div class="table-card-big mt-4">
+        <div class="table-header">
+            <h3>Registered Companies</h3>
+        </div>
+        <div class="table-responsive">
+            <table class="inventory-table">
+                <thead>
+                    <tr>
+                        <th>Company Name</th>
+                        <th>Contact (Admin)</th>
+                        <th class="text-center">Users</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Companies != null && Model.Companies.Any())
+                    {
+                        foreach (var c in Model.Companies)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="product-cell">
+                                        <div class="product-name">@c.CompanyName</div>
+                                        <div class="sku">ID: #@c.CompanyID</div>
+                                    </div>
+                                </td>
+                                <td>@c.AdminEmail</td>
+                                <td class="text-center">
+                                    <span class="badge bg-dark border border-secondary text-light rounded-pill">@c.UserCount</span>
+                                </td>
+                                <td>
+                                    @if (c.Status == "Active")
+                                    {
+                                        <span class="status-green">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-red">Inactive</span>
+                                    }
+                                </td>
+                                <td class="text-end pe-3">
+                                    <button class="btn btn-sm btn-outline-primary me-2"><i class="bi bi-pencil"></i></button>
+                                    @if (c.Status == "Active")
+                                    {
+                                        <button class="btn btn-sm btn-outline-warning" onclick="confirmArchive(@c.CompanyID, '@c.CompanyName')"><i class="bi bi-archive"></i></button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-5">No companies found match the filter.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Archive confirm form (hidden) -->
+<form id="archiveForm" asp-action="ArchiveCompany" method="post" style="display:none">
+    <input type="hidden" name="companyId" id="archiveCompanyId" />
+</form>
+
+<script>
+    function confirmArchive(id, name) {
+        if (confirm('Are you sure you want to archive "' + name + '"? This will mark the company as Inactive.')) {
+            document.getElementById('archiveCompanyId').value = id;
+            document.getElementById('archiveForm').submit();
+        }
+    }
+</script>
+
+<style>
+    .bg-success-subtle { background-color: rgba(25, 135, 84, 0.1) !important; }
+    .bg-danger-subtle { background-color: rgba(220, 53, 69, 0.1) !important; }
+    .table-hover tbody tr:hover { background-color: rgba(255,255,255,0.03) !important; }
+</style>

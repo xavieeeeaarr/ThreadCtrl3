@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Super Admin</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/site.css" />
+
+    <style>
+        body { margin: 0; background: #131211; color: #ffffff; font-family: Segoe UI, sans-serif; overflow-x: hidden; }
+        .app-container { display: flex; height: 100vh; transition: all 0.3s ease; }
+        
+        /* Sidebar Styles (Matching Dashboard) */
+        .sidebar { display: flex; flex-direction: column; width: 250px; background: #75911c; color: black !important; transition: all 0.3s ease; z-index: 1000; border-right: 1px solid rgba(0,0,0,0.1); }
+        .sidebar-nav { flex: 1; overflow-y: auto; }
+        .sidebar a { display: block; color: black !important; padding: 12px 20px; text-decoration: none; transition: background 0.2s; border-left: 3px solid transparent; }
+        .sidebar a:hover { background: rgba(0,0,0,0.1); }
+        .sidebar a.active { background: rgba(0,0,0,0.15); border-left-color: #000; font-weight: 600; }
+        
+        .logout-section { padding: 20px; border-top: 1px solid rgba(0,0,0,0.1); }
+        
+        /* Main Content */
+        .main-content { flex: 1; display: flex; flex-direction: column; width: 100%; min-width: 0; background: #131211; }
+        .content-area { padding: 25px; flex: 1; overflow-y: auto; background: #131211 !important; }
+        
+        /* Top Bar */
+        .top-bar { background: #1a1a1a; border-bottom: 1px solid #333; padding: 10px 20px; }
+        .top-row { display: flex; justify-content: space-between; align-items: center; }
+        
+        /* Responsive */
+        .sidebar-toggle { background: transparent; border: none; font-size: 24px; color: #ffffff; padding: 10px; cursor: pointer; }
+        
+        @@media (max-width: 991.98px) {
+            .sidebar { position: fixed; left: -250px; top: 0; bottom: 0; box-shadow: 2px 0 10px rgba(0,0,0,0.5); }
+            .sidebar.active { left: 0; }
+        }
+        
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 999; }
+        .sidebar-overlay.active { display: block; }
+    </style>
+</head>
+<body>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <div class="app-container">
+        <!-- SIDEBAR -->
+        <div class="sidebar" id="sidebar">
+            <div class="logo-main ms-4 mt-2 mb-2">
+                <div class="d-flex justify-content-between align-items-center">
+                    <img src="~/images/logo.png" alt="Logo" style="max-width: 150px;" />
+                    <button class="btn d-lg-none text-black" id="closeSidebar">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+                <div class="mt-1 small fw-bold text-black-50" style="font-size: 0.7rem; letter-spacing: 1px; text-transform: uppercase;">
+                    Platform Console
+                </div>
+            </div>
+
+            <div class="sidebar-nav">
+                <a asp-action="SuperAdminDashboard" class="@(ViewContext.RouteData.Values["action"]?.ToString() == "SuperAdminDashboard" ? "active" : "")">
+                    <i class="bi bi-speedometer2 me-2"></i> Dashboard
+                </a>
+                <a asp-action="Companies" class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Companies" ? "active" : "")">
+                    <i class="bi bi-building me-2"></i> Companies
+                </a>
+                <a asp-action="AllUsers" class="@(ViewContext.RouteData.Values["action"]?.ToString() == "AllUsers" ? "active" : "")">
+                    <i class="bi bi-people-fill me-2"></i> All Users
+                </a>
+            </div>
+
+            <div class="logout-section">
+                <a asp-action="Logout" class="btn btn-danger w-100 text-white btn-sm">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </a>
+            </div>
+        </div>
+
+        <!-- MAIN -->
+        <div class="main-content">
+            <div class="top-bar">
+                <div class="top-row">
+                    <div class="d-flex align-items-center">
+                        <button class="sidebar-toggle me-2" id="toggleSidebar">
+                            <i class="bi bi-list"></i>
+                        </button>
+                        <div class="h5 mb-0 text-white fw-bold">@ViewData["Title"]</div>
+                    </div>
+
+                    <div class="text-white d-flex align-items-center gap-2">
+                        <i class="bi bi-person-circle fs-4"></i>
+                        <div class="d-flex flex-column align-items-start lh-1">
+                            <div class="fw-bold" style="font-size: 0.9rem;">Hello, @(User.Identity?.Name ?? "Admin")</div>
+                            <div class="text-white-50" style="font-size: 0.75rem;">
+                                Platform | Super Admin
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-area">
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            function toggleSidebar() {
+                $('#sidebar').toggleClass('active');
+                $('#sidebarOverlay').toggleClass('active');
+            }
+            $('#toggleSidebar, #closeSidebar, #sidebarOverlay').on('click', toggleSidebar);
+        });
+    </script>
+</body>
+</html>

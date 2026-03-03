@@ -2,8 +2,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
-// Register data repository
+// Register data repositories
 builder.Services.AddScoped<ThrdCtrl2.Data.UserRepository>();
+builder.Services.AddScoped<ThrdCtrl2.Data.InventoryRepository>();
 
 // Add Authentication
 builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme)

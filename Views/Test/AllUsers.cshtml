@@ -1,0 +1,83 @@
+@model ThrdCtrl2.Models.AllUsersViewModel
+@{
+    ViewData["Title"] = "System-Wide User Discovery";
+    Layout = "_LayoutSuperAdmin";
+}
+
+<div class="dashboard">
+
+    <div class="overview-header">
+        <div>
+            <h1>@ViewData["Title"]</h1>
+            <p class="overview-sub">View and manage all users across all companies in the system.</p>
+        </div>
+        <div class="overview-actions d-flex align-items-center gap-3">
+            <div class="filter-group d-flex align-items-center gap-2">
+                <label class="text-white-50 small mb-0">Filter by Role:</label>
+                <select class="form-select form-select-sm bg-dark text-white border-secondary" style="width: 200px;" onchange="window.location.href='?role=' + this.value">
+                    <option value="All" selected="@(Model.SelectedRole == "All")">All Roles</option>
+                    @foreach (var r in Model.Roles)
+                    {
+                        <option value="@r.RoleName" selected="@(Model.SelectedRole == r.RoleName)">@r.RoleName</option>
+                    }
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-card-big mt-4">
+        <div class="table-header">
+            <h3>Registered Users</h3>
+        </div>
+        <div class="table-responsive">
+            <table class="inventory-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Company</th>
+                        <th>Role</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Users != null && Model.Users.Any())
+                    {
+                        foreach (var u in Model.Users)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="product-cell">
+                                        <div class="product-name">@u.FullName</div>
+                                    </div>
+                                </td>
+                                <td>@u.Email</td>
+                                <td>
+                                    <span class="text-info">@(string.IsNullOrEmpty(u.CompanyName) ? "Platform Admin" : u.CompanyName)</span>
+                                </td>
+                                <td>
+                                    <span class="badge @(u.RoleName == "Super Admin" ? "bg-primary" : "bg-dark border border-secondary text-light")">@u.RoleName</span>
+                                </td>
+                                <td class="text-end pe-3">
+                                    <button class="btn btn-sm btn-outline-primary me-2"><i class="bi bi-pencil"></i></button>
+                                    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-5">No users found for this selection.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-black { background-color: #000 !important; }
+    .table-hover tbody tr:hover { background-color: rgba(61, 90, 254, 0.05) !important; }
+</style>

@@ -15,6 +15,7 @@ GO
 -- 2. Insert Default Roles
 INSERT INTO Roles (RoleName, Description) VALUES 
 ('Super Admin', 'Full system access and configurations'),
+('Company Admin', 'Admin of the companys'),
 ('Inventory Manager', 'Manage stock levels, categories, and warehouses'),
 ('Sales Staff', 'Process customer orders and view availability'),
 ('Procurement Officer', 'Handle purchase orders and supplier relations'),
@@ -26,6 +27,7 @@ CREATE TABLE Users (
     UserID INT PRIMARY KEY IDENTITY(1,1),
     RoleID INT NOT NULL,
     FullName VARCHAR(50) NOT NULL,
+    CompanyName VARCHAR(100) NULL,
     Email VARCHAR(50) NOT NULL UNIQUE,
     Password VARCHAR(255) NOT NULL, -- Prepared for hashed passwords (e.g., BCrypt/Argon2)
     Status VARCHAR(20) NOT NULL,    -- Active / Inactive

@@ -303,23 +303,29 @@ body {
 
 .status-green {
     background: #d1fae5;
+    color: #000000 !important;
     padding: 4px 10px;
     border-radius: 20px;
     font-size: 12px;
+    font-weight: 600;
 }
 
 .status-blue {
     background: #dbeafe;
+    color: #000000 !important;
     padding: 4px 10px;
     border-radius: 20px;
     font-size: 12px;
+    font-weight: 600;
 }
 
 .status-red {
     background: #fee2e2;
+    color: #000000 !important;
     padding: 4px 10px;
     border-radius: 20px;
     font-size: 12px;
+    font-weight: 600;
 }
 
 .status.delayed {
