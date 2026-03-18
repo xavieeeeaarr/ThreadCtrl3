@@ -1,0 +1,347 @@
+@model ThrdCtrl2.Models.DashboardViewModel
+@{
+    Layout = null;
+    var companyName = ViewData["CompanyName"] as string ?? "ThreadCtrl Enterprise";
+    var reportDate = ViewData["ReportDate"] as string ?? DateTime.Now.ToString("MMMM dd, yyyy");
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Operational Report - @companyName</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        @@media print {
+            .no-print { display: none !important; }
+            body { padding: 0; margin: 0; background: #fff !important; color: #000 !important; }
+            .report-container { box-shadow: none !important; border: none !important; margin: 0 !important; width: 100% !important; }
+            .chart-container { page-break-inside: avoid; }
+        }
+
+        body {
+            background-color: #f4f4f4;
+            color: #333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 40px 0;
+        }
+
+        .report-container {
+            background: #fff;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 60px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            border: 1px solid #ddd;
+        }
+
+        .report-header {
+            border-bottom: 2px solid #a7d417;
+            padding-bottom: 20px;
+            margin-bottom: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .company-info h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 800;
+            color: #1a1a1a;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .report-title {
+            text-align: right;
+        }
+
+        .report-title h2 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 300;
+            color: #888;
+        }
+
+        .report-meta {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 20px;
+            border-left: 4px solid #a7d417;
+            padding-left: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-box {
+            padding: 20px;
+            background: #fcfcfc;
+            border: 1px solid #eee;
+            border-radius: 4px;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #999;
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 22px;
+            font-weight: 700;
+            color: #131211;
+        }
+
+        .chart-section {
+            margin-bottom: 50px;
+        }
+
+        .table-report {
+            width: 100%;
+            margin-bottom: 40px;
+        }
+
+        .table-report th {
+            background: #f8f8f8;
+            color: #666;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 12px 15px;
+            border-top: 1px solid #eee;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .table-report td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+
+        .footer {
+            margin-top: 60px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            font-size: 11px;
+            color: #999;
+            text-align: center;
+        }
+
+        .badge-pill {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .bg-correction { background: #eef7d5; color: #6d8c0f; }
+        .bg-damage { background: #fee2e2; color: #dc2626; }
+
+        .btn-print-trigger {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #a7d417;
+            color: #131211;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 50px;
+            font-weight: 700;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            cursor: pointer;
+            z-index: 100;
+        }
+
+        .btn-print-trigger:hover {
+            background: #b8e61a;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+
+    <button class="btn-print-trigger no-print" onclick="window.print()">
+        <i class="bi bi-printer-fill me-2"></i>CONFIRM PRINT
+    </button>
+
+    <div class="report-container">
+        <!-- HEADER -->
+        <header class="report-header">
+            <div class="company-info">
+                <h1>@companyName</h1>
+                <div class="report-meta">Generated on @reportDate</div>
+            </div>
+            <div class="report-title">
+                <h2>OPERATIONAL REPORT</h2>
+                <div class="report-meta">Inventory & Audit Summary</div>
+            </div>
+        </header>
+
+        <!-- KPI SUMMARY -->
+        <section>
+            <div class="section-title">Executive Metrics</div>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-label">Inventory Valuation</div>
+                    <div class="stat-value">₱@Model.TotalInventoryValue.ToString("N0")</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Critical Alerts</div>
+                    <div class="stat-value">@Model.LowStockItemsCount</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Active Orders</div>
+                    <div class="stat-value">@Model.ActiveSalesOrdersCount</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Pending Reviews</div>
+                    <div class="stat-value">@Model.PendingAdjustmentsCount</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ASSET TREND -->
+        <section class="chart-section">
+            <div class="section-title">Asset Trend Distribution</div>
+            <div style="height: 250px;">
+                <canvas id="reportChart"></canvas>
+            </div>
+        </section>
+
+        <!-- PENDING AUTHORIZATIONS -->
+        <section>
+            <div class="section-title">Pending Authorization Queue</div>
+            <table class="table-report">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Originator</th>
+                        <th>Type</th>
+                        <th>Product / Variant</th>
+                        <th class="text-end">Qty</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.PendingAdjustments.Any())
+                    {
+                        <tr><td colspan="6" class="text-center text-muted">No pending authorizations found.</td></tr>
+                    }
+                    @foreach (var adj in Model.PendingAdjustments)
+                    {
+                        <tr>
+                            <td class="fw-bold">#@adj.AdjustmentID.ToString("D4")</td>
+                            <td>@adj.RequestedByName</td>
+                            <td>
+                                <span class="badge-pill @(adj.Type == "Damage" ? "bg-damage" : "bg-correction")">
+                                    @adj.Type
+                                </span>
+                            </td>
+                            <td>
+                                <div class="fw-bold">@adj.ProductName</div>
+                                <div style="font-size: 11px; color: #999;">@adj.VariantInfo</div>
+                            </td>
+                            <td class="text-end">@(adj.ChangeQuantity > 0 ? "+" : "")@adj.ChangeQuantity</td>
+                            <td>@adj.DateRequested.ToString("MMM dd, HH:mm")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+
+        <!-- RECENT AUDIT -->
+        <section>
+            <div class="section-title">Global Audit Trail (Recent)</div>
+            <table class="table-report">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Module</th>
+                        <th>Action Performed</th>
+                        <th class="text-end">Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var log in Model.RecentActivity)
+                    {
+                        <tr>
+                            <td class="fw-bold">@log.UserFullName</td>
+                            <td><span style="color: #666; font-size: 11px; background: #eee; padding: 2px 6px; border-radius: 4px;">@log.Module</span></td>
+                            <td>@log.UserFullName <strong>@log.Action</strong></td>
+                            <td class="text-end text-muted">@log.Timestamp.ToString("MMM dd, HH:mm")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+
+        <footer class="footer">
+            <p>Confidential Business Document - System Generated by Antigravity ThreadCtrl Engine</p>
+            <p>&copy; @DateTime.Now.Year @companyName. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        $(document).ready(function() {
+            const ctx = document.getElementById('reportChart').getContext('2d');
+            
+            const labels = @Html.Raw(Json.Serialize(Model.ValuationTrend.Select(x => x.Month)));
+            const data = @Html.Raw(Json.Serialize(Model.ValuationTrend.Select(x => x.Value)));
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Valuation',
+                        data: data,
+                        borderColor: '#a7d417',
+                        backgroundColor: 'rgba(167, 212, 23, 0.05)',
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { 
+                            beginAtZero: false,
+                            ticks: { font: { size: 9 } }
+                        },
+                        x: { ticks: { font: { size: 9 } } }
+                    }
+                }
+            });
+
+            // Automatically trigger print dialog after chart finishes rendering (if no explicit button click)
+            // But we have a floating button for better UX.
+        });
+    </script>
+</body>
+</html>

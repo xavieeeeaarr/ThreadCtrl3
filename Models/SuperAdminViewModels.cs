@@ -8,7 +8,11 @@ namespace ThrdCtrl2.Models
         public int TotalCompanies { get; set; }
         public int ActiveCompanies { get; set; }
         public int InactiveCompanies { get; set; }
+        public int PendingCompanies { get; set; }
         public int TotalUsers { get; set; }
+        public int MonthlyCount { get; set; }
+        public int YearlyCount { get; set; }
+        public decimal TotalRevenue { get; set; }
         public List<Company> RecentCompanies { get; set; } = new();
         public List<User> RecentUsers { get; set; } = new();
     }
@@ -20,6 +24,13 @@ namespace ThrdCtrl2.Models
         public int TotalCompanies { get; set; }
         public int ActiveCompanies { get; set; }
         public int InactiveCompanies { get; set; }
+        public int PendingCompanies { get; set; }
+
+        // Pagination
+        public int CurrentPage { get; set; }
+        public int TotalPages { get; set; }
+        public int PageSize { get; set; } = 15;
+        public int TotalItems { get; set; }
     }
 
     public class CompanyWithAdmin : Company
@@ -33,5 +44,11 @@ namespace ThrdCtrl2.Models
         public List<Role> Roles { get; set; } = new();
         public string? SelectedRole { get; set; }
         public List<Company> Companies { get; set; } = new();
+
+        // Pagination
+        public int CurrentPage { get; set; }
+        public int TotalPages { get; set; }
+        public int PageSize { get; set; } = 15;
+        public int TotalItems { get; set; }
     }
 }

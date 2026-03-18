@@ -1,4 +1,5 @@
-﻿@{
+﻿@model ThrdCtrl2.Models.ProcurementViewModel
+@{
     ViewData["Title"] = "Procurement";
     Layout = "_LayoutDashboard";
 }
@@ -7,167 +8,599 @@
 
     <!-- HEADER -->
     <div class="overview-header">
-
         <div>
             <h1>Procurement</h1>
-            <p class="overview-sub">
-                Manage suppliers and purchase orders
-            </p>
+            <p class="overview-sub">Manage suppliers and purchase orders</p>
         </div>
 
         <div class="overview-actions">
-            <div class="btn-outline">
-                <i class="bi bi-file-earmark-fill"></i> Export Report
-            </div>
-            <button class="btn-primary"><i class="bi bi-plus-square-fill"></i> New Purchase Order</button>
+            <button class="btn-outline" data-bs-toggle="modal" data-bs-target="#addSupplierModal">
+                <i class="bi bi-person-plus-fill"></i> Add Supplier
+            </button>
+            <button class="btn-primary" data-bs-toggle="modal" data-bs-target="#newPOModal">
+                <i class="bi bi-plus-square-fill"></i> New Purchase Order
+            </button>
         </div>
-
     </div>
 
     <!-- TABS -->
     <div class="proc-tabs">
-        <span class="active-tab">Purchase Orders</span>
-        <span>Suppliers</span>
-        <span>Reorder Alerts</span>
+        <a href="?tab=PurchaseOrders" class="@(Model.ActiveTab == "PurchaseOrders" ? "active-tab" : "") text-white" style="text-decoration: none;">Purchase Orders</a>
+        <a href="?tab=Suppliers" class="@(Model.ActiveTab == "Suppliers" ? "active-tab" : "") text-white ms-4" style="text-decoration: none;">Suppliers</a>
+        <a href="?tab=ReorderAlerts" class="@(Model.ActiveTab == "ReorderAlerts" ? "active-tab" : "") text-white ms-4" style="text-decoration: none;">Reorder Alerts</a>
     </div>
-
 
     <!-- CARDS BELOW -->
     <div class="cards-grid">
-
         <div class="card">
             <div class="stat-label">Pending Approval</div>
-            <div class="stat-value">3</div>
+            <div class="stat-value">@Model.PendingApprovalCount</div>
             <div class="stat-label">Waiting review</div>
-
         </div>
 
         <div class="card">
             <div class="stat-label">Receiving Due</div>
-            <div class="stat-value">8</div>
+            <div class="stat-value">@Model.ReceivingDueCount</div>
             <div class="stat-label">Expected this week</div>
         </div>
 
         <div class="card">
             <div class="stat-label">Active Suppliers</div>
-            <div class="stat-value">24</div>
-            <div class="stat-label">Total Partner</div>
+            <div class="stat-value">@Model.ActiveSuppliersCount</div>
+            <div class="stat-label">Total Partners</div>
         </div>
-
-      
-
-    </div>
-    
-
-    <!-- FILTER BAR -->
-    <div class="filter-bar">
-
-        <div class="filter-group">
-            <select class="filter-input">
-                <option>All Statuses</option>
-                <option>Pending</option>
-                <option>Ordered</option>
-                <option>Delayed</option>
-                <option>Received</option>
-            </select>
-        </div>
-
-        <div class="filter-group">
-            <select class="filter-input">
-                <option>All Suppliers</option>
-            </select>
-        </div>
-
-        <div class="filter-group mt-2">
-            <button class="btn-primary-small">Apply Filters</button>
-        </div>
-
     </div>
 
-    <!-- LOWER SECTION -->
-    <div class="lower-grid-inv">
-
-        <div class="table-card-big">
-
-            <div class="table-responsive">
-                <table class="inventory-table">
-                    <thead>
-                        <tr>
-                            <th>PO #</th>
-                            <th>Supplier</th>
-                            <th>Order Date</th>
-                            <th>Status</th>
-                            <th>Total Cost</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-
-                        <tr>
-                            <td>PO-2024-105</td>
-                            <td>FabriWorld Inc</td>
-                            <td>Oct 26, 2024</td>
-                            <td><span class="status pending">Pending</span></td>
-                            <td>₱4,500.00</td>
-                            <td class="actions">
-                                <i class="bi bi-three-dots"></i>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td>PO-2024-104</td>
-                            <td>Denim Suppliers Ltd</td>
-                            <td>Oct 24, 2024</td>
-                            <td><span class="status ordered">Ordered</span></td>
-                            <td>₱2,100.50</td>
-                            <td class="actions">
-                                <i class="bi bi-three-dots"></i>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td>PO-2024-103</td>
-                            <td>Global Textiles Co.</td>
-                            <td>Oct 22, 2024</td>
-                            <td><span class="status delayed">Delayed</span></td>
-                            <td>₱8,950.00</td>
-                            <td class="actions">
-                                <i class="bi bi-three-dots"></i>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td>PO-2024-102</td>
-                            <td>Button & Zip Masters</td>
-                            <td>Oct 20, 2024</td>
-                            <td><span class="status received">Received</span></td>
-                            <td>₱450.00</td>
-                            <td class="actions">
-                                <i class="bi bi-three-dots"></i>
-                            </td>
-                        </tr>
-
-                    </tbody>
-                </table>
+    @if (Model.ActiveTab == "PurchaseOrders")
+    {
+        <!-- FILTER BAR -->
+        <form method="get" class="filter-bar mt-4">
+            <input type="hidden" name="tab" value="PurchaseOrders" />
+            <div class="filter-group">
+                <label>Status</label>
+                <select name="status" class="filter-input">
+                    <option value="All Statuses" selected="@(Model.SelectedStatus == "All Statuses")">All Statuses</option>
+                    <option value="Pending" selected="@(Model.SelectedStatus == "Pending")">Pending</option>
+                    <option value="Ordered" selected="@(Model.SelectedStatus == "Ordered")">Ordered</option>
+                    <option value="Received" selected="@(Model.SelectedStatus == "Received")">Received</option>
+                </select>
             </div>
-            <!-- TABLE FOOTER -->
-            <div class="table-footer">
-                <div>Showing 1–6 of 24 suppliers</div>
 
-                <div class="pagination">
-                    <button class="page-btn">‹</button>
-                    <button class="page-btn active">1</button>
-                    <button class="page-btn">2</button>
-                    <button class="page-btn">3</button>
-                    <button class="page-btn">4</button>
-                    <button class="page-btn">5</button>
-                    <button class="page-btn">›</button>
+            <div class="filter-group">
+                <label>Supplier</label>
+                <select name="supplierId" class="filter-input">
+                    <option value="">All Suppliers</option>
+                    @foreach (var s in Model.Suppliers)
+                    {
+                        <option value="@s.SupplierID" selected="@(Model.SelectedSupplierId == s.SupplierID)">@s.SupplierName</option>
+                    }
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>&nbsp;</label>
+                <button type="submit" class="btn-primary-small" style="height: 40px; width: auto; min-width: 150px;">Apply Filters</button>
+            </div>
+        </form>
+
+        <!-- TABLE -->
+        <div class="lower-grid-inv mt-3">
+            <div class="table-card-big">
+                <div class="table-responsive">
+                    <table class="inventory-table">
+                        <thead>
+                            <tr>
+                                <th>PO #</th>
+                                <th>Supplier</th>
+                                <th>Product Details</th>
+                                <th>Quantity</th>
+                                <th>Order Date</th>
+                                <th>Status</th>
+                                <th>Total Cost</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!Model.PurchaseOrders.Any())
+                            {
+                                <tr><td colspan="8" class="text-center py-4">No purchase orders found.</td></tr>
+                            }
+                            @foreach (var po in Model.PurchaseOrders)
+                            {
+                                <tr>
+                                    <td>PO-@po.PurchaseOrderID.ToString("D4")</td>
+                                    <td>@po.SupplierName</td>
+                                    <td class="text-white-50 small">@po.ItemSummary</td>
+                                    <td><span class="badge bg-dark border border-secondary">@po.TotalQuantity</span></td>
+                                    <td>@po.OrderDate.ToString("MMM dd, yyyy")</td>
+                                    <td>
+                                        <span class="status @po.Status.ToLower()">@po.Status</span>
+                                    </td>
+                                    <td>₱@po.TotalCost.ToString("N2")</td>
+                                    <td class="actions">
+                                        <i class="bi bi-eye" title="View Details"></i>
+                                        @if (po.Status == "Pending")
+                                        {
+                                            <i class="bi bi-cart-check text-warning ms-2" style="cursor:pointer;" title="Place Order" onclick="approvePO(@po.PurchaseOrderID)"></i>
+                                        }
+                                        else if (po.Status == "Ordered")
+                                        {
+                                            <i class="bi bi-box-seam text-success ms-2" style="cursor:pointer;" title="Mark as Received" onclick="receivePO(@po.PurchaseOrderID)"></i>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- TABLE FOOTER -->
+                <div class="table-footer">
+                    <div class="text-white-50 small">
+                        Showing @(Model.TotalItems == 0 ? 0 : (Model.CurrentPage - 1) * Model.PageSize + 1) to @(Math.Min(Model.CurrentPage * Model.PageSize, Model.TotalItems)) of @Model.TotalItems entries
+                    </div>
+                    <div class="pagination">
+                        @if (Model.CurrentPage > 1)
+                        {
+                            <a class="page-btn" href="@Url.Action("Procurement", new { tab = "PurchaseOrders", page = Model.CurrentPage - 1, status = Model.SelectedStatus, supplierId = Model.SelectedSupplierId })">‹</a>
+                        }
+                        else
+                        {
+                            <button class="page-btn disabled" disabled>‹</button>
+                        }
+
+                        @for (int i = 1; i <= Model.TotalPages; i++)
+                        {
+                            if (i == Model.CurrentPage)
+                            {
+                                <button class="page-btn active">@i</button>
+                            }
+                            else
+                            {
+                                <a class="page-btn" href="@Url.Action("Procurement", new { tab = "PurchaseOrders", page = i, status = Model.SelectedStatus, supplierId = Model.SelectedSupplierId })">@i</a>
+                            }
+                        }
+
+                        @if (Model.CurrentPage < Model.TotalPages)
+                        {
+                            <a class="page-btn" href="@Url.Action("Procurement", new { tab = "PurchaseOrders", page = Model.CurrentPage + 1, status = Model.SelectedStatus, supplierId = Model.SelectedSupplierId })">›</a>
+                        }
+                        else
+                        {
+                            <button class="page-btn disabled" disabled>›</button>
+                        }
+                    </div>
                 </div>
             </div>
-
         </div>
+    }
+    else if (Model.ActiveTab == "Suppliers")
+    {
+        <!-- SUPPLIER FILTER BAR -->
+        <form method="get" class="filter-bar mt-4">
+            <input type="hidden" name="tab" value="Suppliers" />
+            <div class="filter-group">
+                <label>Supplier Status</label>
+                <select name="supplierStatus" class="filter-input">
+                    <option value="Active" selected="@(Model.SelectedSupplierStatus == "Active")">Active</option>
+                    <option value="Inactive" selected="@(Model.SelectedSupplierStatus == "Inactive")">Inactive</option>
+                    <option value="All" selected="@(Model.SelectedSupplierStatus == "All")">All</option>
+                </select>
+            </div>
 
-    </div>
+            <div class="filter-group">
+                <label>&nbsp;</label>
+                <button type="submit" class="btn-primary-small" style="height: 40px; width: auto; min-width: 150px;">Apply Filter</button>
+            </div>
+        </form>
 
+        <div class="lower-grid-inv mt-4">
+            <div class="table-card-big">
+                <div class="table-responsive">
+                    <table class="inventory-table">
+                        <thead>
+                            <tr>
+                                <th>Supplier Name</th>
+                                <th>Contact Info</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!Model.Suppliers.Any())
+                            {
+                                <tr><td colspan="4" class="text-center py-4">No suppliers found.</td></tr>
+                            }
+                            @foreach (var s in Model.Suppliers)
+                            {
+                                <tr>
+                                    <td class="fw-bold">@s.SupplierName</td>
+                                    <td>@s.ContactInfo</td>
+                                    <td>
+                                        <span class="status @(s.IsActive ? "received" : "out")">@(s.IsActive ? "Active" : "Inactive")</span>
+                                    </td>
+                                    <td class="actions">
+                                        <i class="bi bi-pencil" title="Edit"></i>
+                                        @if (s.IsActive)
+                                        {
+                                            <i class="bi bi-archive text-danger ms-2" style="cursor:pointer;" title="Archive" onclick="updateSupplierStatus(@s.SupplierID, false)"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-arrow-counterclockwise text-success ms-2" style="cursor:pointer;" title="Unarchive" onclick="updateSupplierStatus(@s.SupplierID, true)"></i>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+    else if (Model.ActiveTab == "ReorderAlerts")
+    {
+        <div class="lower-grid-inv mt-4">
+            <div class="table-card-big">
+                <div class="table-responsive">
+                    <table class="inventory-table">
+                        <thead>
+                            <tr>
+                                <th>Product Details</th>
+                                <th>Warehouse</th>
+                                <th>Current Stock</th>
+                                <th>Min Level</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!Model.ReorderAlerts.Any())
+                            {
+                                <tr><td colspan="6" class="text-center py-4 text-success">All items are sufficiently stocked!</td></tr>
+                            }
+                            @foreach (var alert in Model.ReorderAlerts)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">@alert.ProductName</div>
+                                        <div class="sku">@alert.SKU</div>
+                                    </td>
+                                    <td>@alert.WarehouseName</td>
+                                    <td class="text-danger fw-bold">@alert.QuantityOnHand</td>
+                                    <td>@alert.MinimumStockLevel</td>
+                                    <td><span class="status out">Low Stock</span></td>
+                                    <td class="actions">
+                                        <button class="btn btn-xs btn-primary" onclick="quickPO('@alert.VariantID', '@alert.ProductName')">Order Now</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
 </div>
+
+<!-- ADD SUPPLIER MODAL -->
+<div class="modal fade" id="addSupplierModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title"><i class="bi bi-person-plus-fill me-2"></i>Add New Supplier</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="addSupplierForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label text-white-50 small">Supplier Name</label>
+                        <input type="text" name="name" class="form-control bg-black text-white border-secondary" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-white-50 small">Contact Details (Email/Phone/Address)</label>
+                        <textarea name="contact" rows="3" class="form-control bg-black text-white border-secondary"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" onclick="submitSupplier()" class="btn btn-primary">Save Supplier</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- NEW PURCHASE ORDER MODAL -->
+<div class="modal fade" id="newPOModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title"><i class="bi bi-cart-plus-fill me-2"></i>New Purchase Order</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="newPOForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label text-white-50 small">Select Supplier</label>
+                        <select name="supplierId" class="form-select bg-black text-white border-secondary" required>
+                            <option value="">Choose Supplier</option>
+                            @foreach (var s in Model.ActiveSuppliers)
+                            {
+                                <option value="@s.SupplierID">@s.SupplierName</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-white-50 small">Target Warehouse</label>
+                        <select name="warehouseId" class="form-select bg-black text-white border-secondary" required>
+                            <option value="">Choose Warehouse</option>
+                            @foreach (var w in Model.AllWarehouses)
+                            {
+                                <option value="@w.WarehouseID">@w.WarehouseName</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-white-50 small">Product / Variant</label>
+                        <select name="variantId" id="poVariant" class="form-select bg-black text-white border-secondary" required onchange="checkPOStock()">
+                            <option value="">Choose Product</option>
+                            @foreach (var v in Model.AllVariants)
+                            {
+                                <option value="@v.VariantID" data-barcode="@v.Barcode">@v.ProductName (@v.SKU)</option>
+                            }
+                        </select>
+                        <div class="mt-2 d-flex gap-2 align-items-center">
+                            <button type="button" class="btn btn-sm btn-outline-warning" id="startPOScanBtn">
+                                <i class="bi bi-qr-code-scan me-1"></i> Scan QR Code
+                            </button>
+                            <span id="poScanStatus" class="text-white-50 small"></span>
+                        </div>
+                        <div id="poBarcodeReaderContainer" style="display: none;" class="mt-2 border border-secondary rounded overflow-hidden">
+                            <div id="poReader" style="width: 100%; min-height: 250px;"></div>
+                            <div class="p-2 bg-black text-center">
+                                <button type="button" class="btn btn-xs btn-danger" id="stopPOScanBtn">Stop Camera</button>
+                            </div>
+                        </div>
+                        <div id="poStockInfo" class="mt-2 text-primary small fw-semibold"></div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label class="form-label text-white-50 small">Quantity</label>
+                            <input type="number" name="qty" class="form-control bg-black text-white border-secondary" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-white-50 small">Cost Per Unit (₱)</label>
+                            <input type="number" step="0.01" name="cost" class="form-control bg-black text-white border-secondary" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" onclick="submitPO()" class="btn btn-primary">Create Order</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script>
+        let html5QrcodeScanner = null;
+        let currentScannerConfig = null;
+
+        function startScanner(renderId, targetSelectId, statusId, startBtnId, stopBtnId, containerId) {
+            currentScannerConfig = { renderId, targetSelectId, statusId, startBtnId, stopBtnId, containerId };
+            const container = document.getElementById(containerId);
+            const status = document.getElementById(statusId);
+            const startBtn = document.getElementById(startBtnId);
+            const stopBtn = document.getElementById(stopBtnId);
+
+            container.style.display = 'block';
+            startBtn.style.display = 'none';
+            stopBtn.style.display = 'inline-block';
+            status.innerHTML = '<span class="text-info">Starting scanner...</span>';
+
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.clear().then(() => initAndStart());
+            } else {
+                initAndStart();
+            }
+
+            function initAndStart() {
+                html5QrcodeScanner = new Html5QrcodeScanner(renderId, { fps: 20, qrbox: 250 });
+                html5QrcodeScanner.render((text) => onScanSuccess(text), (err) => {});
+            }
+        }
+
+        function onScanSuccess(decodedText) {
+            const config = currentScannerConfig;
+            if (!config) return;
+
+            const targetSelect = document.getElementById(config.targetSelectId);
+            const status = document.getElementById(config.statusId);
+            
+            if (matchVariantByBarcode(decodedText, targetSelect)) {
+                status.innerHTML = `<span class="text-success fw-bold">✓ Matched: ${decodedText}</span>`;
+                setTimeout(() => stopScanner(), 1000);
+            } else {
+                status.innerHTML = `<span class="text-warning">No match for: ${decodedText}</span>`;
+            }
+        }
+
+        function stopScanner() {
+            if (html5QrcodeScanner && currentScannerConfig) {
+                const config = currentScannerConfig;
+                html5QrcodeScanner.clear().then(() => {
+                    document.getElementById(config.containerId).style.display = 'none';
+                    document.getElementById(config.startBtnId).style.display = 'inline-block';
+                    document.getElementById(config.stopBtnId).style.display = 'none';
+                    document.getElementById(config.statusId).innerHTML = '';
+                    html5QrcodeScanner = null;
+                    currentScannerConfig = null;
+                }).catch(err => {
+                    console.error(err);
+                    document.getElementById(config.containerId).style.display = 'none';
+                });
+            }
+        }
+
+        function matchVariantByBarcode(barcode, selectElement) {
+            if (!barcode || !selectElement) return false;
+            const search = barcode.trim().toUpperCase();
+            for (let i = 0; i < selectElement.options.length; i++) {
+                const opt = selectElement.options[i];
+                if ((opt.dataset.barcode || "").toUpperCase() === search || opt.text.toUpperCase().includes(search)) {
+                    selectElement.selectedIndex = i;
+                    selectElement.dispatchEvent(new Event('change'));
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function checkPOStock() {
+            const variantId = document.getElementById('poVariant').value;
+            const infoDiv = document.getElementById('poStockInfo');
+            if (!variantId) {
+                infoDiv.innerHTML = '';
+                return;
+            }
+
+            infoDiv.innerHTML = '<span class="spinner-border spinner-border-sm text-primary"></span> Checking stock...';
+            fetch(`/Test/GetWarehousesByVariant?variantId=${variantId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.length === 0) {
+                        infoDiv.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-1 text-warning"></i>Not currently in any warehouse.';
+                    } else {
+                        let html = '<i class="bi bi-box-seam me-1"></i>Current Stock Across Warehouses:<br>';
+                        data.forEach(w => {
+                            html += `<span class="badge bg-secondary me-1 mb-1">${w.warehouseName}: ${w.quantityOnHand}</span>`;
+                        });
+                        infoDiv.innerHTML = html;
+                    }
+                });
+        }
+
+        function submitSupplier() {
+            const form = document.getElementById('addSupplierForm');
+            const data = new FormData(form);
+            const params = new URLSearchParams();
+            for (const pair of data) params.append(pair[0], pair[1]);
+
+            fetch('/Test/AddSupplier', {
+                method: 'POST',
+                body: params
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.success) {
+                    location.href = '?tab=Suppliers';
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            });
+        }
+
+        function submitPO() {
+            const form = document.getElementById('newPOForm');
+            const data = new FormData(form);
+            const params = new URLSearchParams();
+            for (const pair of data) params.append(pair[0], pair[1]);
+
+            fetch('/Test/CreatePurchaseOrder', {
+                method: 'POST',
+                body: params
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.success) {
+                    location.href = '?tab=PurchaseOrders';
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            });
+        }
+
+        function quickPO(variantId, productName) {
+             const variantSelect = document.getElementById('poVariant');
+             variantSelect.value = variantId;
+             variantSelect.dispatchEvent(new Event('change'));
+             const modal = new bootstrap.Modal(document.getElementById('newPOModal'));
+             modal.show();
+        }
+
+        function updateSupplierStatus(id, isActive) {
+            const msg = isActive ? 'Reactivate this supplier?' : 'Archive this supplier? They will no longer appear in the default list.';
+            if (confirm(msg)) {
+                const params = new URLSearchParams();
+                params.append('supplierId', id);
+                params.append('isActive', isActive);
+
+                fetch('/Test/UpdateSupplierStatus', {
+                    method: 'POST',
+                    body: params
+                })
+                .then(res => res.json())
+                .then(result => {
+                    if (result.success) {
+                        location.reload();
+                    } else {
+                        alert('Error: ' + result.message);
+                    }
+                });
+            }
+        }
+
+        function approvePO(poId) {
+            if (confirm('Move this Purchase Order to ORDERED status? This confirms you have placed the order with the supplier.')) {
+                const params = new URLSearchParams();
+                params.append('poId', poId);
+
+                fetch('/Test/ApprovePO', {
+                    method: 'POST',
+                    body: params
+                })
+                .then(res => res.json())
+                .then(result => {
+                    if (result.success) {
+                        location.reload();
+                    } else {
+                        alert('Error: ' + result.message);
+                    }
+                });
+            }
+        }
+
+        function receivePO(poId) {
+            if (confirm('Are you sure you want to mark this Purchase Order as RECEIVED? This will officially ADD the items to your warehouse inventory.')) {
+                const params = new URLSearchParams();
+                params.append('poId', poId);
+
+                fetch('/Test/ReceivePO', {
+                    method: 'POST',
+                    body: params
+                })
+                .then(res => res.json())
+                .then(result => {
+                    if (result.success) {
+                        alert('Inventory Updated Successfully!');
+                        location.reload();
+                    } else {
+                        alert('Error: ' + result.message);
+                    }
+                });
+            }
+        }
+
+        // Bind Scan Events
+        document.getElementById('startPOScanBtn').addEventListener('click', () => {
+            startScanner('poReader', 'poVariant', 'poScanStatus', 'startPOScanBtn', 'stopPOScanBtn', 'poBarcodeReaderContainer');
+        });
+        document.getElementById('stopPOScanBtn').addEventListener('click', stopScanner);
+        document.getElementById('newPOModal').addEventListener('hidden.bs.modal', stopScanner);
+
+    </script>
+}

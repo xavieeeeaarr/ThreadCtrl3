@@ -4,6 +4,7 @@ using System.Data.Common;
 using System;
 using ThrdCtrl2.Models;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Data.SqlClient;
 
 namespace ThrdCtrl2.Data
 {
@@ -141,10 +142,15 @@ namespace ThrdCtrl2.Data
             // Increment UserCount in Companies table
             if (user.CompanyID.HasValue)
             {
-                using var cmdMsg = conn.CreateCommand();
-                cmdMsg.CommandText = "UPDATE dbo.Companies SET UserCount = UserCount + 1 WHERE CompanyID = @cid";
-                var pCid = cmdMsg.CreateParameter(); pCid.ParameterName = "@cid"; pCid.Value = user.CompanyID.Value; cmdMsg.Parameters.Add(pCid);
-                cmdMsg.ExecuteNonQuery();
+                using var checkCmd = conn.CreateCommand();
+                checkCmd.CommandText = "SELECT COUNT(*) FROM sys.columns WHERE object_id = OBJECT_ID('dbo.Companies') AND name = 'UserCount'";
+                if ((int)(checkCmd.ExecuteScalar() ?? 0) > 0)
+                {
+                    using var cmdMsg = conn.CreateCommand();
+                    cmdMsg.CommandText = "UPDATE dbo.Companies SET UserCount = UserCount + 1 WHERE CompanyID = @cid";
+                    var pCid = cmdMsg.CreateParameter(); pCid.ParameterName = "@cid"; pCid.Value = user.CompanyID.Value; cmdMsg.Parameters.Add(pCid);
+                    cmdMsg.ExecuteNonQuery();
+                }
             }
 
             return Convert.ToInt32(id);
@@ -171,7 +177,7 @@ namespace ThrdCtrl2.Data
         {
             using var conn = GetConnection();
             using var cmd = conn.CreateCommand();
-            cmd.CommandText = @"SELECT u.UserID, u.RoleID, u.FullName, u.CompanyID, c.CompanyName, u.Email, u.Password, u.Status, r.RoleName
+            cmd.CommandText = @"SELECT u.*, r.RoleName, c.CompanyName, c.Status as CompanyStatus
                                 FROM dbo.Users u
                                 LEFT JOIN dbo.Roles r ON u.RoleID = r.RoleID
                                 LEFT JOIN dbo.Companies c ON u.CompanyID = c.CompanyID
@@ -181,31 +187,58 @@ namespace ThrdCtrl2.Data
             using var rdr = cmd.ExecuteReader();
             if (rdr.Read())
             {
-                return new User
+                var user = new User
                 {
-                    UserID = rdr.GetInt32(0),
-                    RoleID = rdr.GetInt32(1),
-                    FullName = rdr.GetString(2),
-                    CompanyID = rdr.IsDBNull(3) ? null : (int?)rdr.GetInt32(3),
-                    CompanyName = rdr.IsDBNull(4) ? null : rdr.GetString(4),
-                    Email = rdr.GetString(5),
-                    Password = rdr.GetString(6),
-                    Status = rdr.GetString(7),
-                    RoleName = rdr.IsDBNull(8) ? null : rdr.GetString(8)
+                    UserID = rdr.GetInt32(rdr.GetOrdinal("UserID")),
+                    RoleID = rdr.GetInt32(rdr.GetOrdinal("RoleID")),
+                    FullName = rdr.GetString(rdr.GetOrdinal("FullName")),
+                    CompanyID = rdr.IsDBNull(rdr.GetOrdinal("CompanyID")) ? null : (int?)rdr.GetInt32(rdr.GetOrdinal("CompanyID")),
+                    CompanyName = rdr.IsDBNull(rdr.GetOrdinal("CompanyName")) ? null : rdr.GetString(rdr.GetOrdinal("CompanyName")),
+                    Email = rdr.GetString(rdr.GetOrdinal("Email")),
+                    Password = rdr.GetString(rdr.GetOrdinal("Password")),
+                    Status = rdr.GetString(rdr.GetOrdinal("Status")),
+                    RoleName = rdr.IsDBNull(rdr.GetOrdinal("RoleName")) ? null : rdr.GetString(rdr.GetOrdinal("RoleName"))
                 };
+
+                try {
+                    user.CompanyStatus = rdr.IsDBNull(rdr.GetOrdinal("CompanyStatus")) ? null : rdr.GetString(rdr.GetOrdinal("CompanyStatus"));
+                } catch {
+                    user.CompanyStatus = "Active"; // Fallback if column missing
+                }
+                
+                return user;
             }
             return null;
         }
 
-        public int CreateCompany(string companyName)
+        public int CreateCompany(string companyName, string subscriptionType)
         {
             using var conn = GetConnection();
             using var cmd = conn.CreateCommand();
-            cmd.CommandText = @"INSERT INTO dbo.Companies (CompanyName, Status, UserCount)
-                                VALUES (@CompanyName, 'Active', 0);
-                                SELECT SCOPE_IDENTITY();";
-            var pComp = cmd.CreateParameter(); pComp.ParameterName = "@CompanyName"; pComp.Value = companyName; cmd.Parameters.Add(pComp);
             conn.Open();
+
+            // Detect available columns
+            using var schemaCmd = conn.CreateCommand();
+            schemaCmd.CommandText = "SELECT name FROM sys.columns WHERE object_id = OBJECT_ID('dbo.Companies')";
+            var columns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            using (var rdr = schemaCmd.ExecuteReader()) {
+                while (rdr.Read()) columns.Add(rdr.GetString(0));
+            }
+
+            var cols = new List<string> { "CompanyName" };
+            var vals = new List<string> { "@CompanyName" };
+            
+            if (columns.Contains("Status")) { cols.Add("Status"); vals.Add("'Pending'"); }
+            if (columns.Contains("UserCount")) { cols.Add("UserCount"); vals.Add("0"); }
+            if (columns.Contains("SubscriptionType")) { cols.Add("SubscriptionType"); vals.Add("@SubscriptionType"); }
+
+            cmd.CommandText = $"INSERT INTO dbo.Companies ({string.Join(", ", cols)}) VALUES ({string.Join(", ", vals)}); SELECT SCOPE_IDENTITY();";
+            
+            var pComp = cmd.CreateParameter(); pComp.ParameterName = "@CompanyName"; pComp.Value = companyName; cmd.Parameters.Add(pComp);
+            if (columns.Contains("SubscriptionType")) {
+                var pSub = cmd.CreateParameter(); pSub.ParameterName = "@SubscriptionType"; pSub.Value = subscriptionType; cmd.Parameters.Add(pSub);
+            }
+
             var id = cmd.ExecuteScalar();
             return Convert.ToInt32(id);
         }
@@ -226,35 +259,44 @@ namespace ThrdCtrl2.Data
             var list = new List<Company>();
             using var conn = GetConnection();
             using var cmd = conn.CreateCommand();
-            string query = "SELECT CompanyID, CompanyName, Status, UserCount FROM dbo.Companies";
+            string query = "SELECT * FROM dbo.Companies";
             if (!string.IsNullOrEmpty(status) && status != "All")
             {
-                query += " WHERE Status = @status";
+                query = "SELECT * FROM dbo.Companies WHERE Status = @status";
                 var pStat = cmd.CreateParameter(); pStat.ParameterName = "@status"; pStat.Value = status; cmd.Parameters.Add(pStat);
             }
             query += " ORDER BY CompanyName";
             cmd.CommandText = query;
             conn.Open();
             using var rdr = cmd.ExecuteReader();
+            var hasSubCol = false;
+            try { rdr.GetOrdinal("SubscriptionType"); hasSubCol = true; } catch { }
+            var hasStatusCol = false;
+            try { rdr.GetOrdinal("Status"); hasStatusCol = true; } catch { }
+
             while (rdr.Read())
             {
                 list.Add(new Company
                 {
-                    CompanyID = rdr.GetInt32(0),
-                    CompanyName = rdr.GetString(1),
-                    Status = rdr.GetString(2),
-                    UserCount = rdr.GetInt32(3)
+                    CompanyID = rdr.GetInt32(rdr.GetOrdinal("CompanyID")),
+                    CompanyName = rdr.GetString(rdr.GetOrdinal("CompanyName")),
+                    Status = hasStatusCol ? rdr.GetString(rdr.GetOrdinal("Status")) : "Active",
+                    UserCount = rdr.GetInt32(rdr.GetOrdinal("UserCount")),
+                    SubscriptionType = (hasSubCol && !rdr.IsDBNull(rdr.GetOrdinal("SubscriptionType"))) 
+                                       ? rdr.GetString(rdr.GetOrdinal("SubscriptionType")) 
+                                       : "Monthly"
                 });
             }
             return list;
         }
 
-        public void ArchiveCompany(int id)
+        public void UpdateCompanyStatus(int id, string status)
         {
             using var conn = GetConnection();
             using var cmd = conn.CreateCommand();
-            cmd.CommandText = "UPDATE dbo.Companies SET Status = 'Inactive' WHERE CompanyID = @id";
+            cmd.CommandText = "UPDATE dbo.Companies SET Status = @status WHERE CompanyID = @id";
             var pId = cmd.CreateParameter(); pId.ParameterName = "@id"; pId.Value = id; cmd.Parameters.Add(pId);
+            var pStatus = cmd.CreateParameter(); pStatus.ParameterName = "@status"; pStatus.Value = status; cmd.Parameters.Add(pStatus);
             conn.Open();
             cmd.ExecuteNonQuery();
         }
@@ -269,14 +311,78 @@ namespace ThrdCtrl2.Data
             cmd.CommandText = "SELECT COUNT(*) FROM dbo.Companies";
             vm.TotalCompanies = (int)(cmd.ExecuteScalar() ?? 0);
 
-            cmd.CommandText = "SELECT COUNT(*) FROM dbo.Companies WHERE Status = 'Active'";
-            vm.ActiveCompanies = (int)(cmd.ExecuteScalar() ?? 0);
+            // Detection
+            var columns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            using (var schemaCmd = conn.CreateCommand()) {
+                schemaCmd.CommandText = "SELECT name FROM sys.columns WHERE object_id = OBJECT_ID('dbo.Companies')";
+                using (var rdr = schemaCmd.ExecuteReader()) {
+                    while (rdr.Read()) columns.Add(rdr.GetString(0));
+                }
+            }
 
-            cmd.CommandText = "SELECT COUNT(*) FROM dbo.Companies WHERE Status = 'Inactive'";
-            vm.InactiveCompanies = (int)(cmd.ExecuteScalar() ?? 0);
+            bool hasStatus = columns.Contains("Status");
+            bool hasSub = columns.Contains("SubscriptionType");
+
+            if (hasStatus) {
+                cmd.CommandText = "SELECT COUNT(*) FROM dbo.Companies WHERE Status = 'Active'";
+                vm.ActiveCompanies = (int)(cmd.ExecuteScalar() ?? 0);
+
+                cmd.CommandText = "SELECT COUNT(*) FROM dbo.Companies WHERE Status = 'Inactive'";
+                vm.InactiveCompanies = (int)(cmd.ExecuteScalar() ?? 0);
+
+                cmd.CommandText = "SELECT COUNT(*) FROM dbo.Companies WHERE Status = 'Pending'";
+                vm.PendingCompanies = (int)(cmd.ExecuteScalar() ?? 0);
+            } else {
+                // Fallback: All companies are active if status column missing
+                vm.ActiveCompanies = vm.TotalCompanies;
+                vm.PendingCompanies = 0;
+                vm.InactiveCompanies = 0;
+            }
+
+            if (hasSub) {
+                cmd.CommandText = "SELECT COUNT(*) FROM dbo.Companies WHERE SubscriptionType = 'Monthly'";
+                vm.MonthlyCount = (int)(cmd.ExecuteScalar() ?? 0);
+
+                cmd.CommandText = "SELECT COUNT(*) FROM dbo.Companies WHERE SubscriptionType = 'Yearly'";
+                vm.YearlyCount = (int)(cmd.ExecuteScalar() ?? 0);
+
+                // Revenue calculation
+                string statusFilter = hasStatus ? "WHERE Status = 'Active'" : "";
+                
+                cmd.CommandText = $"SELECT COUNT(*) FROM dbo.Companies {statusFilter} AND SubscriptionType = 'Monthly'";
+                int activeMonthly = (int)(cmd.ExecuteScalar() ?? 0);
+
+                cmd.CommandText = $"SELECT COUNT(*) FROM dbo.Companies {statusFilter} AND SubscriptionType = 'Yearly'";
+                int activeYearly = (int)(cmd.ExecuteScalar() ?? 0);
+
+                vm.TotalRevenue = (activeMonthly * 20000m) + (activeYearly * 500000m);
+            } else {
+                // Fallback: All are monthly if sub column missing
+                vm.MonthlyCount = vm.TotalCompanies;
+                vm.YearlyCount = 0;
+                vm.TotalRevenue = vm.ActiveCompanies * 20000m;
+            }
 
             cmd.CommandText = "SELECT COUNT(*) FROM dbo.Users";
             vm.TotalUsers = (int)(cmd.ExecuteScalar() ?? 0);
+            
+            // Fetch Recent Companies
+            vm.RecentCompanies = new List<Company>();
+            cmd.CommandText = hasStatus 
+                ? "SELECT TOP 5 CompanyID, CompanyName, Status FROM dbo.Companies ORDER BY CompanyID DESC"
+                : "SELECT TOP 5 CompanyID, CompanyName, 'Active' as Status FROM dbo.Companies ORDER BY CompanyID DESC";
+            
+            using (var rdr = cmd.ExecuteReader())
+            {
+                while (rdr.Read())
+                {
+                    vm.RecentCompanies.Add(new Company { 
+                        CompanyID = rdr.GetInt32(0),
+                        CompanyName = rdr.GetString(1),
+                        Status = rdr.GetString(2)
+                    });
+                }
+            }
 
             return vm;
         }
@@ -332,6 +438,51 @@ namespace ThrdCtrl2.Data
             var pId = cmd.CreateParameter(); pId.ParameterName = "@id"; pId.Value = id; cmd.Parameters.Add(pId);
             conn.Open();
             cmd.ExecuteNonQuery();
+        }
+        public void MigrateDatabase()
+        {
+            using var conn = GetConnection();
+            using var cmd = conn.CreateCommand();
+            conn.Open();
+
+            // Check for Status column in Companies
+            if (!ColumnExists(conn, "dbo.Companies", "Status")) {
+                cmd.CommandText = "ALTER TABLE dbo.Companies ADD Status NVARCHAR(20) DEFAULT 'Pending' WITH VALUES;";
+                cmd.ExecuteNonQuery();
+                // Set existing ones to Active
+                cmd.CommandText = "UPDATE dbo.Companies SET Status = 'Active'";
+                cmd.ExecuteNonQuery();
+            }
+
+            // Check for SubscriptionType column in Companies
+            if (!ColumnExists(conn, "dbo.Companies", "SubscriptionType")) {
+                cmd.CommandText = "ALTER TABLE dbo.Companies ADD SubscriptionType NVARCHAR(50) DEFAULT 'Monthly' WITH VALUES;";
+                cmd.ExecuteNonQuery();
+            }
+
+            // Check for UserCount column
+            if (!ColumnExists(conn, "dbo.Companies", "UserCount")) {
+                cmd.CommandText = "ALTER TABLE dbo.Companies ADD UserCount INT DEFAULT 0 WITH VALUES;";
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        private bool ColumnExists(DbConnection conn, string tableName, string columnName)
+        {
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "SELECT COUNT(*) FROM sys.columns WHERE object_id = OBJECT_ID(@table) AND name = @col";
+            
+            var pTable = cmd.CreateParameter();
+            pTable.ParameterName = "@table";
+            pTable.Value = tableName;
+            cmd.Parameters.Add(pTable);
+
+            var pCol = cmd.CreateParameter();
+            pCol.ParameterName = "@col";
+            pCol.Value = columnName;
+            cmd.Parameters.Add(pCol);
+
+            return (int)(cmd.ExecuteScalar() ?? 0) > 0;
         }
     }
 }

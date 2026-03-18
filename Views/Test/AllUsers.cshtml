@@ -33,6 +33,7 @@
             <table class="inventory-table">
                 <thead>
                     <tr>
+                        <th style="width: 50px;">#</th>
                         <th>Name</th>
                         <th>Email</th>
                         <th>Company</th>
@@ -43,9 +44,11 @@
                 <tbody>
                     @if (Model.Users != null && Model.Users.Any())
                     {
+                        int index = (Model.CurrentPage - 1) * Model.PageSize + 1;
                         foreach (var u in Model.Users)
                         {
                             <tr>
+                                <td class="text-white-50 small">@index</td>
                                 <td>
                                     <div class="product-cell">
                                         <div class="product-name">@u.FullName</div>
@@ -63,16 +66,58 @@
                                     <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
                                 </td>
                             </tr>
+                            index++;
                         }
                     }
                     else
                     {
                         <tr>
-                            <td colspan="5" class="text-center py-5">No users found for this selection.</td>
+                            <td colspan="6" class="text-center py-5 text-white-50">
+                                <i class="bi bi-people fs-1 d-block mb-2"></i>
+                                No users found for this selection.
+                            </td>
                         </tr>
                     }
                 </tbody>
             </table>
+        </div>
+
+        <!-- TABLE FOOTER -->
+        <div class="table-footer">
+            <div class="text-white-50 small">
+                Showing @(Model.TotalItems == 0 ? 0 : (Model.CurrentPage - 1) * Model.PageSize + 1) to @(Math.Min(Model.CurrentPage * Model.PageSize, Model.TotalItems)) of @Model.TotalItems entries
+            </div>
+            <div class="pagination">
+                @if (Model.CurrentPage > 1)
+                {
+                    <a class="page-btn" href="@Url.Action("AllUsers", new { page = Model.CurrentPage - 1, role = Model.SelectedRole })">‹</a>
+                }
+                else
+                {
+                    <button class="page-btn disabled" disabled>‹</button>
+                }
+
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    if (i == Model.CurrentPage)
+                    {
+                        <button class="page-btn active">@i</button>
+                    }
+                    else
+                    {
+                        <a class="page-btn" href="@Url.Action("AllUsers", new { page = i, role = Model.SelectedRole })">@i</a>
+                    }
+                }
+
+                @if (Model.CurrentPage < Model.TotalPages)
+                {
+                    <a class="page-btn" href="@Url.Action("AllUsers", new { page = Model.CurrentPage + 1, role = Model.SelectedRole })">›</a>
+                }
+                else
+                {
+                    <button class="page-btn disabled" disabled>›</button>
+                }
+            </div>
         </div>
     </div>
 </div>

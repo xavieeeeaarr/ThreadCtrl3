@@ -30,11 +30,12 @@
             display: flex;
             flex-direction: column;
             width: 250px;
-            background: #75911c;
-            color: black !important;
+            background: #131211;
+            color: #ffffff;
             transition: all 0.3s ease;
             z-index: 1000;
-            border-right: 1px solid rgba(0,0,0,0.1);
+            border-right: 1px solid rgba(255,255,255,0.05);
+            padding: 10px;
         }
 
         .sidebar-nav {
@@ -44,14 +45,29 @@
 
         .sidebar a {
             display: block;
-            color: black !important;
+            color: #ffffff;
             padding: 12px 20px;
             text-decoration: none;
-            transition: background 0.2s;
+            transition: all 0.2s;
+            border-radius: 8px;
+            margin: 4px 0;
         }
 
-        .sidebar a:hover {
-            background: rgba(0,0,0,0.1);
+        .sidebar a:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+
+        .sidebar a.active {
+            background: #a7d417;
+            color: #131211 !important;
+            font-weight: 600;
+        }
+
+        .sidebar a i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
         }
 
         .logout-section {
@@ -94,19 +110,7 @@
             font-weight: 600;
         }
 
-        .search-input {
-            background: #2a2a2a;
-            border: 1px solid #444;
-            color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            width: 100%;
-            max-width: 300px;
-        }
 
-        .search-input::placeholder {
-            color: #888;
-        }
 
         /* Responsive Utilities */
         .table-responsive {
@@ -127,12 +131,13 @@
         }
 
         /* Responsive Breakpoints */
-        @@media (max-width: 991.98px) {
+        @@media (max-width: 1024px) {
             .sidebar {
                 position: fixed;
                 left: -250px;
                 top: 0;
                 bottom: 0;
+                height: 100vh;
                 box-shadow: 2px 0 10px rgba(0,0,0,0.5);
             }
 
@@ -152,27 +157,43 @@
                 font-size: 16px !important;
             }
 
-            /* Stack cards and grids on small mobile */
-            @@media (max-width: 575.98px) {
-                .cards-grid, .dashboard-grid {
-                    grid-template-columns: 1fr !important;
-                }
-                .lower-grid {
-                    grid-template-columns: 1fr !important;
-                }
-                .overview-header {
-                    flex-direction: column;
-                    align-items: flex-start !important;
-                    gap: 15px;
-                }
-                .overview-actions {
-                    width: 100%;
-                }
-                .overview-actions button {
-                    width: 100%;
-                    margin-bottom: 10px;
-                }
+            .content-area {
+                padding: 15px;
             }
+        }
+
+        /* iPad and Tablets specifically */
+        @@media (min-width: 768px) and (max-width: 1024px) {
+            .cards-grid, .dashboard-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
+        }
+
+        /* Small mobile */
+        @@media (max-width: 767.98px) {
+            .cards-grid, .dashboard-grid, .lower-grid {
+                grid-template-columns: 1fr !important;
+            }
+
+            .overview-header {
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: 15px;
+            }
+
+            .overview-actions {
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .overview-actions button {
+                width: 100%;
+                margin: 0 !important;
+            }
+
+
         }
 
         /* Overlay for mobile */
@@ -201,59 +222,57 @@
     <div class="app-container">
 
         <!-- SIDEBAR -->
-        <div class="sidebar text-black" id="sidebar">
+        <div class="sidebar text-white" id="sidebar">
             <div class="logo-main ms-4 mt-2 mb-2">
                 <div class="d-flex justify-content-between align-items-center">
                     <img src="~/images/logo.png" alt="Logo" style="max-width: 150px;" />
-                    <button class="btn d-lg-none text-black" id="closeSidebar">
+                    <button class="btn d-lg-none text-white" id="closeSidebar">
                         <i class="bi bi-x-lg"></i>
                     </button>
                 </div>
             </div>
 
-            <div class="sidebar-nav">
-                <a asp-controller="Test" asp-action="dashboard" class="text-black"><i class="bi bi-clipboard-data-fill"></i> Dashboard</a>
+                @{
+                    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+                    bool IsActive(string action) => string.Equals(currentAction, action, StringComparison.OrdinalIgnoreCase);
+                }
+                <a asp-controller="Test" asp-action="Dashboard" class="@(IsActive("Dashboard") ? "active" : "")"><i class="bi bi-clipboard-data-fill"></i> Dashboard</a>
                 
                 @if (User.IsInRole("Super Admin") || User.IsInRole("Company Admin") || User.IsInRole("Inventory Manager") || User.IsInRole("Auditor"))
                 {
-                    <a asp-controller="Test" asp-action="Report" class="text-black"><i class="bi bi-file-earmark-bar-graph-fill"></i> Reports & Valuation</a>
+                    <a asp-controller="Test" asp-action="Report" class="@(IsActive("Report") ? "active" : "")"><i class="bi bi-file-earmark-bar-graph-fill"></i> Reports & Valuation</a>
                 }
 
                 @if (User.IsInRole("Super Admin") || User.IsInRole("Company Admin") || User.IsInRole("Inventory Manager") || User.IsInRole("Sales Staff") || User.IsInRole("Procurement Officer") || User.IsInRole("Auditor"))
                 {
-                    <a asp-controller="Test" asp-action="Inventory" class="text-black"><i class="bi bi-archive-fill"></i> Inventory</a>
+                    <a asp-controller="Test" asp-action="Inventory" class="@(IsActive("Inventory") ? "active" : "")"><i class="bi bi-archive-fill"></i> Inventory</a>
                 }
 
                 @if (User.IsInRole("Super Admin") || User.IsInRole("Company Admin") || User.IsInRole("Sales Staff"))
                 {
-                    <a asp-controller="Test" asp-action="Sales" class="text-black"><i class="bi bi-cart-dash-fill"></i> Sales Orders</a>
+                    <a asp-controller="Test" asp-action="Sales" class="@(IsActive("Sales") ? "active" : "")"><i class="bi bi-cart-dash-fill"></i> Sales Orders</a>
                 }
 
                 @if (User.IsInRole("Super Admin") || User.IsInRole("Company Admin") || User.IsInRole("Procurement Officer"))
                 {
-                    <a asp-controller="Test" asp-action="Procurement" class="text-black"><i class="bi bi-basket2-fill"></i> Procurement</a>
+                    <a asp-controller="Test" asp-action="Procurement" class="@(IsActive("Procurement") ? "active" : "")"><i class="bi bi-basket2-fill"></i> Procurement</a>
                 }
 
                 @if (User.IsInRole("Super Admin") || User.IsInRole("Company Admin") || User.IsInRole("Inventory Manager") || User.IsInRole("Auditor"))
                 {
-                    <a asp-controller="Test" asp-action="Stock" class="text-black"><i class="bi bi-box-seam-fill"></i> Stock Adjustments</a>
+                    <a asp-controller="Test" asp-action="Stock" class="@(IsActive("Stock") ? "active" : "")"><i class="bi bi-box-seam-fill"></i> Stock Adjustments</a>
                 }
 
                 @if (User.IsInRole("Super Admin") || User.IsInRole("Company Admin"))
                 {
-                    <a asp-controller="Test" asp-action="UserManagement" class="text-black"><i class="bi bi-person-fill-add"></i> User Management</a>
+                    <a asp-controller="Test" asp-action="UserManagement" class="@(IsActive("UserManagement") ? "active" : "")"><i class="bi bi-person-fill-add"></i> User Management</a>
                 }
 
                 @if (User.IsInRole("Super Admin") || User.IsInRole("Company Admin") || User.IsInRole("Auditor"))
                 {
-                    <a asp-controller="Test" asp-action="Security" class="text-black"><i class="bi bi-shield-fill-exclamation"></i> Security & Audit</a>
+                    <a asp-controller="Test" asp-action="Security" class="@(IsActive("Security") ? "active" : "")"><i class="bi bi-shield-fill-exclamation"></i> Security & Audit</a>
                 }
 
-                @if (User.IsInRole("Super Admin") || User.IsInRole("Company Admin") || User.IsInRole("Inventory Manager"))
-                {
-                    <a asp-controller="Test" asp-action="Settings" class="text-black"><i class="bi bi-gear-fill"></i> Settings</a>
-                }
-            </div>
 
             <div class="logout-section">
                 <a asp-controller="Test" asp-action="Logout" class="btn btn-danger w-100 text-white">
@@ -291,9 +310,7 @@
                     </div>
                 </div>
 
-                <div class="bottom-row">
-                    <input type="text" class="search-input" placeholder="Search...">
-                </div>
+                @* Search input removed as requested *@
             </div>
 
             <div class="content-area">
@@ -325,5 +342,6 @@
             });
         });
     </script>
+    @RenderSection("Scripts", required: false)
 </body>
 </html>

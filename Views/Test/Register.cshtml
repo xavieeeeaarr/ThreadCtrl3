@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "Register";
 }
 
@@ -25,41 +25,98 @@
                 <div class="subtitle">Centralized Inventory Management System</div>
             </div>
 
-            <form asp-action="Register" method="post">
+            <form id="registerForm" asp-action="Register" method="post">
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-                <h1 style="color: white;" class="system-name">@ViewData["Title"] Here!</h1>
+                <!-- STEP 1: ACCOUNT DETAILS -->
+                <div id="step1">
+                    <h1 style="color: white;" class="system-name mb-4">Create Your Account</h1>
+                    
+                    <div class="form-floating mb-3">
+                        <input type="text" name="companyName" class="form-control" placeholder="Name of The Company" required />
+                        <label class="form-label-black"><i class="bi bi-building"></i> Name of The Company</label>
+                    </div>
 
-                <div class="form-floating mb-3">
-                    <input type="text" name="companyName" class="form-control" placeholder="Name of The Company" required />
-                    <label class="form-label-black"><i class="bi bi-building"></i> Name of The Company</label>
+                    <div class="form-floating mb-3">
+                        <input type="text" name="fullName" class="form-control" placeholder="Full Name" required />
+                        <label class="form-label-black"><i class="bi bi-person-fill"></i> Full Name</label>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input type="email" name="email" class="form-control" placeholder="name@example.com" required />
+                        <label class="form-label-black"><i class="bi bi-envelope-fill"></i> Email</label>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input type="password" name="password" class="form-control" placeholder="password" autocomplete="new-password" required />
+                        <label class="form-label-black"><i class="bi bi-lock-fill"></i> Password</label>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input type="password" name="confirmPassword" class="form-control" placeholder="confirm password" autocomplete="new-password" required />
+                        <label class="form-label-black"><i class="bi bi-lock-fill"></i> Confirm Password</label>
+                    </div>
+
+                    <div>
+                        <button type="button" class="w-100 btn btn-lg btn-primary" onclick="showStep2()">Next: Choose Subscription <i class="bi bi-arrow-right"></i></button>
+                    </div>
                 </div>
 
-                <div class="form-floating mb-3">
-                    <input type="text" name="fullName" class="form-control" placeholder="Full Name" required />
-                    <label class="form-label-black"><i class="bi bi-person-fill"></i> Full Name</label>
+                <!-- STEP 2: SUBSCRIPTION SELECTION -->
+                <div id="step2" style="display: none;">
+                    <h1 style="color: white;" class="system-name mb-2">Choose Your Plan</h1>
+                    <p class="text-white-50 text-center mb-4 small opacity-75">Select a subscription that fits your business scale.</p>
+
+                    <input type="hidden" name="subscriptionType" id="subscriptionType" value="Monthly" />
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-12">
+                            <div class="sub-card active" onclick="selectPlan('Monthly', this)">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="plan-info">
+                                        <h3 class="mb-0">Standard Monthly</h3>
+                                        <p class="mb-0 opacity-75 small">Billed every 30 days</p>
+                                    </div>
+                                    <div class="price-tag">
+                                        <span class="currency">₱</span>20,000<span class="period">/mo</span>
+                                    </div>
+                                </div>
+                                <ul class="features mt-3">
+                                    <li><i class="bi bi-check2-circle me-2"></i> All Core Modules</li>
+                                    <li><i class="bi bi-check2-circle me-2"></i> Unlimited Warehouse Items</li>
+                                    <li><i class="bi bi-check2-circle me-2"></i> Standard Support</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="sub-card" onclick="selectPlan('Yearly', this)">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="plan-info">
+                                        <h3 class="mb-0">Enterprise Yearly</h3>
+                                        <p class="mb-0 opacity-75 small">Full Year License (Best Value)</p>
+                                    </div>
+                                    <div class="price-tag">
+                                        <span class="currency">₱</span>500,000<span class="period">/yr</span>
+                                    </div>
+                                </div>
+                                <ul class="features mt-3">
+                                    <li><i class="bi bi-check2-circle me-2"></i> Priority Enterprise Support</li>
+                                    <li><i class="bi bi-check2-circle me-2"></i> Advanced Data Analytics</li>
+                                    <li><i class="bi bi-check2-circle me-2"></i> Dedicated Account Manager</li>
+                                </ul>
+                                <div class="badge-premium">PREMIUM</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-lg btn-outline-secondary flex-grow-1" onclick="showStep1()"><i class="bi bi-arrow-left"></i> Back</button>
+                        <button type="submit" class="btn btn-lg btn-primary flex-grow-2 px-5">Register</button>
+                    </div>
                 </div>
 
-                <div class="form-floating mb-3">
-                    <input type="email" name="email" class="form-control" placeholder="name@example.com" required />
-                    <label class="form-label-black"><i class="bi bi-envelope-fill"></i> Email</label>
-                </div>
-
-                <div class="form-floating mb-3">
-                    <input type="password" name="password" class="form-control" placeholder="password" autocomplete="new-password" required />
-                    <label class="form-label-black"><i class="bi bi-lock-fill"></i> Password</label>
-                </div>
-
-                <div class="form-floating mb-3">
-                    <input type="password" name="confirmPassword" class="form-control" placeholder="confirm password" autocomplete="new-password" required />
-                    <label class="form-label-black"><i class="bi bi-lock-fill"></i> Confirm Password</label>
-                </div>
-
-                <div>
-                    <button type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
-                </div>
-
-                <div class="subtitle-link text-white mt-2 text-center">
+                <div class="subtitle-link text-white mt-4 text-center">
                     <p>already have an account? <a asp-action="Login" class="text-primary fw-bold">log in here</a></p>
                 </div>
 
@@ -74,4 +131,143 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        function showStep2() {
+            // Simple validation before going to step 2
+            const inputs = document.querySelectorAll('#step1 input[required]');
+            let valid = true;
+            inputs.forEach(i => {
+                const val = i.value.trim();
+                if(!val) {
+                    i.classList.add('is-invalid');
+                    valid = false;
+                } else {
+                    i.classList.remove('is-invalid');
+                }
+            });
+
+            if(valid) {
+                document.getElementById('step1').style.display = 'none';
+                document.getElementById('step2').style.display = 'block';
+            }
+        }
+
+        function showStep1() {
+            document.getElementById('step1').style.display = 'block';
+            document.getElementById('step2').style.display = 'none';
+        }
+
+        function selectPlan(type, element) {
+            document.getElementById('subscriptionType').value = type;
+            document.querySelectorAll('.sub-card').forEach(c => c.classList.remove('active'));
+            element.classList.add('active');
+        }
+    </script>
 }
+
+<style>
+    .sub-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 24px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        text-align: left;
+        color: white;
+    }
+
+    .sub-card h3 {
+        color: #ffffff;
+        font-weight: 700;
+    }
+
+    .sub-card .opacity-75 {
+        color: rgba(255, 255, 255, 0.8) !important;
+    }
+
+    .sub-card:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(163, 230, 53, 0.3);
+        transform: translateY(-4px);
+    }
+
+    .sub-card.active {
+        background: rgba(163, 230, 53, 0.1);
+        border-color: #a3e635;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), 0 0 20px rgba(163, 230, 53, 0.1);
+    }
+
+    .sub-card.active::after {
+        content: '\F272';
+        font-family: "bootstrap-icons";
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: #a3e635;
+        color: black;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: bold;
+    }
+
+    .price-tag {
+        font-size: 1.75rem;
+        font-weight: 900;
+        color: #a3e635;
+        line-height: 1;
+    }
+
+    .price-tag .currency {
+        font-size: 1rem;
+        margin-right: 2px;
+        vertical-align: top;
+        opacity: 0.8;
+    }
+
+    .price-tag .period {
+        font-size: 0.9rem;
+        opacity: 0.6;
+        font-weight: 500;
+        margin-left: 2px;
+    }
+
+    .features {
+        list-style: none;
+        padding: 0;
+        font-size: 0.85rem;
+    }
+
+    .features li {
+        margin-bottom: 8px;
+        color: rgba(255, 255, 255, 0.95);
+        display: flex;
+        align-items: center;
+    }
+
+    .subtitle-link p {
+        color: rgba(255, 255, 255, 0.9) !important;
+    }
+
+    .badge-premium {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        background: linear-gradient(135deg, #a3e635, #65a30d);
+        color: black;
+        padding: 4px 15px;
+        font-size: 0.65rem;
+        font-weight: 900;
+        letter-spacing: 1px;
+        border-top-left-radius: 12px;
+    }
+
+    .flex-grow-2 { flex-grow: 2; }
+</style>

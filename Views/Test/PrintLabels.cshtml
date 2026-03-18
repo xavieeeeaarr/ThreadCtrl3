@@ -1,0 +1,118 @@
+@model List<ThrdCtrl2.Models.ProductVariant>
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Print QR Labels</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: white;
+            color: black;
+        }
+
+        .label-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .label-card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            text-align: center;
+            border-radius: 8px;
+            page-break-inside: avoid;
+            background: #fff;
+        }
+
+        .qr-img {
+            width: 150px;
+            height: 150px;
+            margin-bottom: 10px;
+        }
+
+        .product-name {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .variant-info {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .sku-box {
+            background: #f4f4f4;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 13px;
+            display: inline-block;
+        }
+
+        @@media print {
+            body {
+                padding: 0;
+            }
+            .no-print {
+                display: none;
+            }
+            .label-card {
+                border: 1px solid #000;
+            }
+        }
+
+        .print-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 15px;
+        }
+
+        .btn-print {
+            background: #0d6efd;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="print-header no-print">
+        <div>
+            <h2 style="margin:0">QR Product Labels</h2>
+            <p style="margin:5px 0 0 0; color:#666">Ready to print @Model.Count labels</p>
+        </div>
+        <button class="btn-print" onclick="window.print()">Print Labels</button>
+    </div>
+
+    <div class="label-grid">
+        @foreach (var v in Model)
+        {
+            <div class="label-card">
+                <img class="qr-img" src="/Test/GetBarcodeImage?sku=@(System.Net.WebUtility.UrlEncode(v.SKU))" alt="QR Code" />
+                <span class="product-name">@v.ProductName</span>
+                <span class="variant-info">@v.Size | @v.Color</span>
+                <div class="sku-box">@v.SKU</div>
+            </div>
+        }
+    </div>
+
+</body>
+</html>

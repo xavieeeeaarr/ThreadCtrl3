@@ -8,14 +8,15 @@
 
     <div class="overview-header">
         <div>
-            <h1>@ViewData["Title"]</h1>
-            <p class="overview-sub">Manage organizations and their subscription status.</p>
+            <h1>Subscription Console</h1>
+            <p class="overview-sub">Monitor organization registration, verify payments, and manage access.</p>
         </div>
         <div class="overview-actions d-flex align-items-center gap-3">
             <div class="filter-group d-flex align-items-center gap-2">
                 <label class="text-white-50 small mb-0">Filter:</label>
                 <select class="form-select form-select-sm bg-dark text-white border-secondary" style="width: 150px;" onchange="window.location.href='?status=' + this.value">
                     <option value="All" selected="@(Model.CurrentFilter == "All")">All Companies</option>
+                    <option value="Pending" selected="@(Model.CurrentFilter == "Pending")">Pending Approval</option>
                     <option value="Active" selected="@(Model.CurrentFilter == "Active")">Active Only</option>
                     <option value="Inactive" selected="@(Model.CurrentFilter == "Inactive")">Inactive Only</option>
                 </select>
@@ -26,19 +27,19 @@
     <!-- Summary Cards -->
     <div class="cards-grid mt-4">
         <div class="card">
-            <div class="stat-label">Total Companies</div>
-            <div class="stat-value">@Model.TotalCompanies</div>
-            <div class="stat-label">Platform-wide</div>
+            <div class="stat-label">Pending Approval</div>
+            <div class="stat-value text-warning">@Model.PendingCompanies</div>
+            <div class="stat-label">New registrations</div>
         </div>
         <div class="card">
-            <div class="stat-label">Active Companies</div>
+            <div class="stat-label">Active Subscriptions</div>
             <div class="stat-value text-success">@Model.ActiveCompanies</div>
-            <div class="stat-label">Current active</div>
+            <div class="stat-label">Access granted</div>
         </div>
         <div class="card">
-            <div class="stat-label">Inactive Companies</div>
+            <div class="stat-label">Inactive/Unpaid</div>
             <div class="stat-value text-danger">@Model.InactiveCompanies</div>
-            <div class="stat-label">Archived</div>
+            <div class="stat-label">Access restricted</div>
         </div>
     </div>
 
@@ -50,8 +51,10 @@
             <table class="inventory-table">
                 <thead>
                     <tr>
+                        <th style="width: 50px;">#</th>
                         <th>Company Name</th>
                         <th>Contact (Admin)</th>
+                        <th>Plan</th>
                         <th class="text-center">Users</th>
                         <th>Status</th>
                         <th class="text-end">Actions</th>
@@ -60,9 +63,11 @@
                 <tbody>
                     @if (Model.Companies != null && Model.Companies.Any())
                     {
+                        int index = (Model.CurrentPage - 1) * Model.PageSize + 1;
                         foreach (var c in Model.Companies)
                         {
                             <tr>
+                                <td class="text-white-50 small">@index</td>
                                 <td>
                                     <div class="product-cell">
                                         <div class="product-name">@c.CompanyName</div>
@@ -70,6 +75,13 @@
                                     </div>
                                 </td>
                                 <td>@c.AdminEmail</td>
+                                <td>
+                                    @if(c.SubscriptionType == "Yearly") {
+                                        <span class="badge bg-primary rounded-pill"><i class="bi bi-star-fill me-1"></i> Yearly</span>
+                                    } else {
+                                        <span class="badge bg-secondary rounded-pill">Monthly</span>
+                                    }
+                                </td>
                                 <td class="text-center">
                                     <span class="badge bg-dark border border-secondary text-light rounded-pill">@c.UserCount</span>
                                 </td>
@@ -78,43 +90,124 @@
                                     {
                                         <span class="status-green">Active</span>
                                     }
+                                    else if (c.Status == "Pending")
+                                    {
+                                        <span class="status-blue" style="background: rgba(59, 130, 246, 0.1); color: #60a5fa !important;">Pending</span>
+                                    }
                                     else
                                     {
                                         <span class="status-red">Inactive</span>
                                     }
                                 </td>
                                 <td class="text-end pe-3">
-                                    <button class="btn btn-sm btn-outline-primary me-2"><i class="bi bi-pencil"></i></button>
-                                    @if (c.Status == "Active")
+                                    @if (c.Status == "Pending")
                                     {
-                                        <button class="btn btn-sm btn-outline-warning" onclick="confirmArchive(@c.CompanyID, '@c.CompanyName')"><i class="bi bi-archive"></i></button>
+                                        <button class="btn btn-sm btn-success" onclick="approveCompany(@c.CompanyID, '@c.CompanyName')">
+                                            <i class="bi bi-check-circle-fill me-1"></i> Approve
+                                        </button>
+                                    }
+                                    else if (c.Status == "Active")
+                                    {
+                                        <button class="btn btn-sm btn-outline-warning" onclick="confirmArchive(@c.CompanyID, '@c.CompanyName')">
+                                            <i class="bi bi-pause-fill me-1"></i> Deactivate
+                                        </button>
+                                    }
+                                    else if (c.Status == "Inactive")
+                                    {
+                                        <button class="btn btn-sm btn-outline-success" onclick="activateCompany(@c.CompanyID, '@c.CompanyName')">
+                                            <i class="bi bi-play-fill me-1"></i> Restore
+                                        </button>
                                     }
                                 </td>
                             </tr>
+                            index++;
                         }
                     }
                     else
                     {
                         <tr>
-                            <td colspan="5" class="text-center py-5">No companies found match the filter.</td>
+                            <td colspan="6" class="text-center py-5 text-white-50">
+                                <i class="bi bi-building fs-1 d-block mb-2"></i>
+                                No companies found match the filter.
+                            </td>
                         </tr>
                     }
                 </tbody>
             </table>
         </div>
+
+        <!-- TABLE FOOTER -->
+        <div class="table-footer">
+            <div class="text-white-50 small">
+                Showing @(Model.TotalItems == 0 ? 0 : (Model.CurrentPage - 1) * Model.PageSize + 1) to @(Math.Min(Model.CurrentPage * Model.PageSize, Model.TotalItems)) of @Model.TotalItems entries
+            </div>
+            <div class="pagination">
+                @if (Model.CurrentPage > 1)
+                {
+                    <a class="page-btn" href="@Url.Action("Companies", new { page = Model.CurrentPage - 1, status = Model.CurrentFilter })">‹</a>
+                }
+                else
+                {
+                    <button class="page-btn disabled" disabled>‹</button>
+                }
+
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    if (i == Model.CurrentPage)
+                    {
+                        <button class="page-btn active">@i</button>
+                    }
+                    else
+                    {
+                        <a class="page-btn" href="@Url.Action("Companies", new { page = i, status = Model.CurrentFilter })">@i</a>
+                    }
+                }
+
+                @if (Model.CurrentPage < Model.TotalPages)
+                {
+                    <a class="page-btn" href="@Url.Action("Companies", new { page = Model.CurrentPage + 1, status = Model.CurrentFilter })">›</a>
+                }
+                else
+                {
+                    <button class="page-btn disabled" disabled>›</button>
+                }
+            </div>
+        </div>
     </div>
 </div>
 
-<!-- Archive confirm form (hidden) -->
+<!-- Hidden Action Forms -->
+<form id="approveForm" asp-action="ApproveCompany" method="post" style="display:none">
+    <input type="hidden" name="companyId" id="approveCompanyId" />
+</form>
+
 <form id="archiveForm" asp-action="ArchiveCompany" method="post" style="display:none">
     <input type="hidden" name="companyId" id="archiveCompanyId" />
 </form>
 
+<form id="activateForm" asp-action="ActivateCompany" method="post" style="display:none">
+    <input type="hidden" name="companyId" id="activateCompanyId" />
+</form>
+
 <script>
+    function approveCompany(id, name) {
+        if (confirm('Verify registration for "' + name + '"? This will grant the Company Admin access to the platform.')) {
+            document.getElementById('approveCompanyId').value = id;
+            document.getElementById('approveForm').submit();
+        }
+    }
+
     function confirmArchive(id, name) {
-        if (confirm('Are you sure you want to archive "' + name + '"? This will mark the company as Inactive.')) {
+        if (confirm('Deactivate "' + name + '"? All accounts under this company will be restricted from logging in.')) {
             document.getElementById('archiveCompanyId').value = id;
             document.getElementById('archiveForm').submit();
+        }
+    }
+
+    function activateCompany(id, name) {
+        if (confirm('Restore access for "' + name + '"?')) {
+            document.getElementById('activateCompanyId').value = id;
+            document.getElementById('activateForm').submit();
         }
     }
 </script>

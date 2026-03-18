@@ -1,14 +1,13 @@
-﻿@{
+﻿@model ThrdCtrl2.Models.SalesViewModel
+@{
     ViewData["Title"] = "Sales Order";
     Layout = "_LayoutDashboard";
 }
-
 
 <div class="dashboard">
 
     <!-- HEADER -->
     <div class="overview-header">
-
         <div>
             <h1>Sales Orders</h1>
             <p class="overview-sub">
@@ -18,54 +17,52 @@
 
         <div class="overview-actions">
             <button class="btn-outline"><i class="bi bi-file-earmark-fill"></i> Export Report</button>
-            <button class="btn-primary"><i class="bi bi-plus-square-fill"></i> Add Sales Order</button>
+            <button class="btn-primary" data-bs-toggle="modal" data-bs-target="#addSalesOrderModal">
+                <i class="bi bi-plus-square-fill"></i> Add Sales Order
+            </button>
         </div>
-
     </div>
 
     <!-- FILTER BAR -->
-    <div class="filter-bar">
-
+    <form method="get" action="@Url.Action("Sales", "Test")" class="filter-bar">
         <div class="filter-group">
             <label>Status</label>
-            <select class="filter-input">
-                <option>All Statuses</option>
+            <select name="status" class="filter-input">
+                <option value="All Statuses" selected="@(Model.SelectedStatus == "All Statuses" ? "selected" : null)">All Statuses</option>
+                <option value="Pending" selected="@(Model.SelectedStatus == "Pending" ? "selected" : null)">Pending</option>
+                <option value="Paid" selected="@(Model.SelectedStatus == "Paid" ? "selected" : null)">Paid</option>
+                <option value="Cancelled" selected="@(Model.SelectedStatus == "Cancelled" ? "selected" : null)">Cancelled</option>
             </select>
         </div>
 
         <div class="filter-group">
             <label>Date</label>
-            <select class="filter-input">
-                <option>dd/mm/yy</option>
-            </select>
+            <input type="date" name="date" class="filter-input" value="@(Model.SelectedDate?.ToString("yyyy-MM-dd"))" />
         </div>
 
-
-        <div class="filter-group mt-2">
-            <button class="btn-primary-small">Apply Filters</button>
+        <div class="filter-group">
+            <label>&nbsp;</label>
+            <div class="d-flex align-items-center gap-2">
+                <button type="submit" class="btn-primary-small" style="height: 40px; width: auto; min-width: 120px;">Apply Filters</button>
+                <a href="@Url.Action("Sales", "Test")" class="btn-outline" style="text-decoration: none; font-size: 13px; height: 40px; display: flex; align-items: center;">Clear</a>
+            </div>
         </div>
-
-    </div>
-
-
+    </form>
 
     <!-- LOWER SECTION -->
     <div class="lower-grid-inv">
-
         <!-- INVENTORY TABLE -->
         <div class="table-card-big">
-
             <div class="table-header">
-                <h3>Inventory Items</h3>
-                <span class="view-all">View All</span>
+                <h3>Recent Orders</h3>
             </div>
 
             <div class="table-responsive">
                 <table class="inventory-table">
                     <thead>
                         <tr>
-                            
-                            <th>Order #</th>
+                            <th style="width: 50px;">#</th>
+                            <th>Order ID</th>
                             <th>Customer</th>
                             <th>Date</th>
                             <th>Status</th>
@@ -73,103 +70,303 @@
                             <th>Actions</th>
                         </tr>
                     </thead>
-
                     <tbody>
-
-                        <tr>
-                            
-                            <td>SO-2025-089</td>
-                            <td>Kathryn Bernardo</td>'
-                            <td>Oct 20, 2025</td>'
-                            <td><span class="status in">In Stock</span></td>
-                            <td>₱100,000</td>
-                            <td class="actions">
-                                <i class="bi bi-pencil"></i>
-                                <i class="bi bi-trash"></i>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td>SO-2025-090</td>
-                            <td>Gar Flores</td>'
-                            <td>Oct 23, 2025</td>'
-                            <td><span class="status in">In Stock</span></td>
-                            <td>₱50,000</td>
-                            <td class="actions">
-                                <i class="bi bi-pencil"></i>
-                                <i class="bi bi-trash"></i>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td>SO-2025-091</td>
-                            <td>Princess Angel Nieves</td>'
-                            <td>Oct 28, 2025</td>'
-                            <td><span class="status in">In Stock</span></td>
-                            <td>₱70,000</td>
-                            <td class="actions">
-                                <i class="bi bi-pencil"></i>
-                                <i class="bi bi-trash"></i>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td>SO-2025-092</td>
-                            <td>Julia Montes</td>'
-                            <td>Oct 29, 2025</td>'
-                            <td><span class="status in">In Stock</span></td>
-                            <td>₱100,000</td>
-                            <td class="actions">
-                                <i class="bi bi-pencil"></i>
-                                <i class="bi bi-trash"></i>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td>SO-2025-093</td>
-                            <td>Kathryn Bernardo</td>'
-                            <td>Oct 29, 2025</td>'
-                            <td><span class="status in">In Stock</span></td>
-                            <td>₱500,000</td>
-                            <td class="actions">
-                                <i class="bi bi-pencil"></i>
-                                <i class="bi bi-trash"></i>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td>SO-2025-094</td>
-                            <td>Minatozaki Sana</td>'
-                            <td>Oct 31, 2025</td>'
-                            <td><span class="status in">In Stock</span></td>
-                            <td>₱100,000</td>
-                            <td class="actions">
-                                <i class="bi bi-pencil"></i>
-                                <i class="bi bi-trash"></i>
-                            </td>
-                        </tr>
-
+                        @if (Model.Orders != null && Model.Orders.Any())
+                        {
+                            int index = (Model.CurrentPage - 1) * Model.PageSize + 1;
+                            foreach (var order in Model.Orders)
+                            {
+                                <tr>
+                                    <td class="text-white-50 small">@index</td>
+                                    <td>#SO-@(order.SalesOrderID.ToString("D4"))</td>
+                                    <td>@(order.CustomerName)</td>
+                                    <td>@order.OrderDate.ToString("MMM dd, yyyy")</td>
+                                    <td>
+                                        @if (order.Status == "Paid") { <span class="status-green">Paid</span> }
+                                        else if (order.Status == "Cancelled") { <span class="status-red">Cancelled</span> }
+                                        else { <span class="status-blue">@order.Status</span> }
+                                    </td>
+                                    <td class="fw-bold">₱@order.TotalAmount.ToString("N2")</td>
+                                    <td class="actions">
+                                        <button class="btn btn-sm btn-outline-info me-1"><i class="bi bi-eye"></i></button>
+                                        <button class="btn btn-sm btn-outline-warning"><i class="bi bi-pencil"></i></button>
+                                    </td>
+                                </tr>
+                                index++;
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center py-5 text-white-50">
+                                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                    No sales orders found.
+                                </td>
+                            </tr>
+                        }
                     </tbody>
                 </table>
             </div>
 
             <!-- TABLE FOOTER -->
             <div class="table-footer">
-                <div>Showing 1–6 of 24 Sales Order</div>
-
+                <div class="text-white-50 small">
+                    Showing @(Model.TotalItems == 0 ? 0 : (Model.CurrentPage - 1) * Model.PageSize + 1) to @(Math.Min(Model.CurrentPage * Model.PageSize, Model.TotalItems)) of @Model.TotalItems entries
+                </div>
                 <div class="pagination">
-                    <button class="page-btn">‹</button>
-                    <button class="page-btn active">1</button>
-                    <button class="page-btn">2</button>
-                    <button class="page-btn">3</button>
-                    <button class="page-btn">4</button>
-                    <button class="page-btn">5</button>
-                    <button class="page-btn">›</button>
+                    @if (Model.CurrentPage > 1)
+                    {
+                        <a class="page-btn" href="@Url.Action("Sales", new { page = Model.CurrentPage - 1, status = Model.SelectedStatus, date = Model.SelectedDate?.ToString("yyyy-MM-dd") })">‹</a>
+                    }
+                    else
+                    {
+                        <button class="page-btn disabled" disabled>‹</button>
+                    }
+
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        if (i == Model.CurrentPage)
+                        {
+                            <button class="page-btn active">@i</button>
+                        }
+                        else
+                        {
+                            <a class="page-btn" href="@Url.Action("Sales", new { page = i, status = Model.SelectedStatus, date = Model.SelectedDate?.ToString("yyyy-MM-dd") })">@i</a>
+                        }
+                    }
+
+                    @if (Model.CurrentPage < Model.TotalPages)
+                    {
+                        <a class="page-btn" href="@Url.Action("Sales", new { page = Model.CurrentPage + 1, status = Model.SelectedStatus, date = Model.SelectedDate?.ToString("yyyy-MM-dd") })">›</a>
+                    }
+                    else
+                    {
+                        <button class="page-btn disabled" disabled>›</button>
+                    }
                 </div>
             </div>
-
         </div>
-
     </div>
-
 </div>
+
+<div class="modal fade" id="addSalesOrderModal" tabindex="-1" aria-labelledby="addSalesOrderModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-white border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title" id="addSalesOrderModalLabel">Create New Sales Order</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createOrderForm">
+                    <div id="errorMessage" class="alert alert-danger d-none"></div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Customer Name</label>
+                        <input type="text" name="customerName" class="form-control bg-secondary text-white border-0" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Warehouse</label>
+                        <select name="warehouseId" id="modalWarehouse" class="form-select bg-dark text-white border-secondary" required>
+                            <option value="">Select a warehouse...</option>
+                            @foreach (var w in ViewBag.Warehouses as List<ThrdCtrl2.Models.Warehouse>)
+                            {
+                                <option value="@w.WarehouseID">@w.WarehouseName</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Product / Variant</label>
+                        <select name="variantId" id="modalVariant" class="form-select bg-dark text-white border-secondary" required onchange="checkExistingWarehouses()">
+                            <option value="">Select a product...</option>
+                            @if (ViewBag.Variants != null)
+                            {
+                                foreach (var v in ViewBag.Variants as List<ThrdCtrl2.Models.ProductVariant>)
+                                {
+                                    <option value="@v.VariantID" data-barcode="@v.Barcode">@v.ProductName (@v.SKU - @v.Size / @v.Color)</option>
+                                }
+                            }
+                        </select>
+                        <div class="mt-2 d-flex gap-2 align-items-center">
+                            <button type="button" class="btn btn-sm btn-outline-warning" id="startScanBtn">
+                                <i class="bi bi-qr-code-scan me-1"></i> Scan QR Code
+                            </button>
+                            <span id="scanStatus" class="text-white-50 small"></span>
+                        </div>
+                        <div id="barcodeReaderContainer" style="display: none;" class="mt-2 border border-secondary rounded overflow-hidden">
+                            <div id="reader" style="width: 100%; min-height: 250px;"></div>
+                            <div class="p-2 bg-black text-center">
+                                <button type="button" class="btn btn-xs btn-danger" id="stopScanBtn">Stop Camera</button>
+                            </div>
+                        </div>
+                        <div id="existingWarehouseInfo" class="mt-2 text-primary small fw-semibold"></div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Quantity</label>
+                            <input type="number" name="quantity" class="form-control bg-secondary text-white border-0" min="1" required>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitSalesOrder()">Place Order</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script>
+        let html5QrcodeScanner = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Stop scanner when modal is closed
+            document.getElementById('addSalesOrderModal').addEventListener('hidden.bs.modal', stopScanner);
+
+            const startBtn = document.getElementById('startScanBtn');
+            const stopBtn = document.getElementById('stopScanBtn');
+            const readerContainer = document.getElementById('barcodeReaderContainer');
+            const scanStatus = document.getElementById('scanStatus');
+
+            startBtn.addEventListener('click', function() {
+                readerContainer.style.display = 'block';
+                scanStatus.innerHTML = '<span class="text-info">Starting scanner...</span>';
+                
+                if (!html5QrcodeScanner) {
+                    html5QrcodeScanner = new Html5QrcodeScanner(
+                        "reader", 
+                        { 
+                            fps: 20, 
+                            qrbox: { width: 250, height: 250 },
+                            aspectRatio: 1.0,
+                            rememberLastUsedCamera: true,
+                            supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
+                        },
+                        false
+                    );
+                }
+
+                html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+                startBtn.style.display = 'none';
+                stopBtn.style.display = 'inline-block';
+            });
+
+            stopBtn.addEventListener('click', stopScanner);
+
+        });
+
+        function onScanSuccess(decodedText) {
+            console.log(`Scan Result: ${decodedText}`);
+            const cleanText = decodedText.trim();
+            
+            if (matchVariantByBarcode(cleanText)) {
+                const scanStatus = document.getElementById('scanStatus');
+                scanStatus.innerHTML = `<div class="alert alert-success p-2 mb-0 mt-2 animate__animated animate__pulse"><i class="bi bi-check-circle-fill me-2"></i><strong>Auto-Selected:</strong> ${cleanText}</div>`;
+                if (navigator.vibrate) navigator.vibrate(100);
+                setTimeout(stopScanner, 1200);
+            } else {
+                const scanStatus = document.getElementById('scanStatus');
+                scanStatus.innerHTML = `<div class="alert alert-warning p-2 mb-0 mt-2"><i class="bi bi-exclamation-triangle-fill me-2"></i>No match in list for: ${cleanText}</div>`;
+            }
+        }
+
+        function matchVariantByBarcode(barcode) {
+            if (!barcode) return false;
+            const search = barcode.trim().toUpperCase();
+            let matchFound = false;
+            const variantSelect = document.getElementById('modalVariant');
+            
+            for (let i = 0; i < variantSelect.options.length; i++) {
+                const option = variantSelect.options[i];
+                // Get data-barcode or the SKU part of the text
+                const optBarcode = (option.dataset.barcode || "").trim().toUpperCase();
+                const optText = option.text.toUpperCase();
+                
+                // Exact match on barcode/SKU data OR text includes the scanned value
+                if (optBarcode === search || optText.includes(search)) {
+                    variantSelect.selectedIndex = i;
+                    variantSelect.dispatchEvent(new Event('change'));
+                    matchFound = true;
+                    break;
+                }
+            }
+            return matchFound;
+        }
+
+        function onScanFailure(error) { /* Noise */ }
+
+        function stopScanner() {
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.clear().then(() => {
+                    document.getElementById('barcodeReaderContainer').style.display = 'none';
+                    document.getElementById('startScanBtn').style.display = 'inline-block';
+                    document.getElementById('stopScanBtn').style.display = 'none';
+                    document.getElementById('scanStatus').innerHTML = '';
+                }).catch(err => console.error(err));
+            }
+        }
+
+        function checkExistingWarehouses() {
+            const variantId = document.getElementById('modalVariant').value;
+            const infoDiv = document.getElementById('existingWarehouseInfo');
+            
+            if (!variantId) {
+                infoDiv.innerHTML = '';
+                return;
+            }
+
+            infoDiv.innerHTML = '<span class="spinner-border spinner-border-sm text-primary" role="status"></span> Checking existing stock...';
+
+            fetch(`/Test/GetWarehousesByVariant?variantId=${variantId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.length === 0) {
+                        infoDiv.innerHTML = '<i class="bi bi-info-circle me-1"></i>Out of Stock / Never assigned to any warehouse.';
+                    } else {
+                        let html = '<i class="bi bi-box-seam me-1"></i>Current Stock:<br>';
+                        data.forEach(w => {
+                            html += `<span class="badge bg-secondary me-1">${w.warehouseName}: ${w.quantityOnHand}</span>`;
+                        });
+                        infoDiv.innerHTML = html;
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    infoDiv.textContent = 'Error checking warehouses.';
+                });
+        }
+
+        function submitSalesOrder() {
+            const form = document.getElementById('createOrderForm');
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.classList.add('d-none');
+
+            const formData = new FormData(form);
+            const data = {};
+            formData.forEach((value, key) => data[key] = value);
+
+            fetch('/Test/CreateSalesOrder', {
+                method: 'POST',
+                body: new URLSearchParams(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    location.reload();
+                } else {
+                    errorDiv.textContent = result.message;
+                    errorDiv.classList.remove('d-none');
+                }
+            })
+            .catch(error => {
+                errorDiv.textContent = 'An unexpected error occurred.';
+                errorDiv.classList.remove('d-none');
+            });
+        }
+    </script>
+}

@@ -15,71 +15,121 @@
     <!-- Stat Cards -->
     <div class="cards-grid mt-4">
         <div class="card">
-            <div class="stat-label">Total Companies</div>
-            <div class="stat-value">@Model.TotalCompanies</div>
-            <div class="stat-label text-primary">System Growth</div>
+            <div class="stat-label">Pending Approval</div>
+            <div class="stat-value text-warning">@Model.PendingCompanies</div>
+            <div class="stat-label small opacity-50">Action Required</div>
         </div>
         <div class="card">
             <div class="stat-label">Active Companies</div>
             <div class="stat-value text-success">@Model.ActiveCompanies</div>
-            <div class="stat-label">Operational</div>
+            <div class="stat-label small opacity-50">Operational</div>
         </div>
         <div class="card">
-            <div class="stat-label">Inactive</div>
-            <div class="stat-value text-danger">@Model.InactiveCompanies</div>
-            <div class="stat-label">Archived</div>
+            <div class="stat-label">Total Revenue</div>
+            <div class="stat-value" style="color: #a7d417;">₱@Model.TotalRevenue.ToString("N0")</div>
+            <div class="stat-label small opacity-50">Combined Gains</div>
         </div>
         <div class="card">
             <div class="stat-label">Total Users</div>
             <div class="stat-value">@Model.TotalUsers</div>
-            <div class="stat-label">Platform-wide</div>
+            <div class="stat-label small opacity-50">Platform-wide</div>
         </div>
     </div>
 
     <!-- Main Grid -->
     <div class="lower-grid mt-4">
-        <div class="table-card-big">
+        <div class="table-card-big" style="background: #1a1a1a; padding: 25px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
             <div class="table-header border-bottom border-secondary pb-3 mb-3">
-                <h3 class="mb-0">System Activity Overview</h3>
+                <h3 class="mb-0">Subscription Distribution</h3>
             </div>
-            <div style="height: 300px; display: flex; align-items: center; justify-content: center; background: #222; border-radius: 8px;">
-                <div class="text-white-50 text-center">
-                    <i class="bi bi-bar-chart-fill fs-1 d-block mb-2"></i>
-                    Activity Chart Sample UI
-                </div>
+            <div style="height: 300px; position: relative;">
+                <canvas id="subscriptionChart"></canvas>
             </div>
         </div>
 
-        <div class="health-card">
+        <div class="health-card" style="background: #1a1a1a; padding: 25px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
             <div class="table-header border-bottom border-secondary pb-3 mb-3">
                 <h3 class="mb-0">Recent Companies</h3>
             </div>
             <div class="list-group list-group-flush">
-                <div class="list-group-item bg-transparent border-secondary text-white px-0 py-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="fw-bold">sample_corp</div>
-                            <div class="small text-white-50">Registered 2h ago</div>
+                @if (Model.RecentCompanies != null && Model.RecentCompanies.Any())
+                {
+                    foreach (var company in Model.RecentCompanies)
+                    {
+                        <div class="list-group-item bg-transparent border-secondary text-white px-0 py-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-bold">@company.CompanyName</div>
+                                    <div class="small text-white-50">ID: #@company.CompanyID</div>
+                                </div>
+                                <span class="badge @(company.Status == "Active" ? "bg-success" : company.Status == "Pending" ? "bg-primary" : "bg-danger")" style="font-size: 0.7rem;">@company.Status</span>
+                            </div>
                         </div>
-                        <span class="status-green">Active</span>
-                    </div>
-                </div>
-                 <div class="list-group-item bg-transparent border-secondary text-white px-0 py-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="fw-bold">antigravity_dev</div>
-                            <div class="small text-white-50">Registered 5h ago</div>
-                        </div>
-                        <span class="status-green">Active</span>
-                    </div>
-                </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-white-50 py-4 text-center">No recent companies found.</div>
+                }
             </div>
             <div class="text-center mt-3 pt-3 border-top border-secondary">
-                <a asp-action="Companies" class="view-all text-decoration-none">View All Companies</a>
+                <a asp-action="Companies" class="view-all text-decoration-none" style="color: #a7d417; font-weight: 600;">View All Subscriptions</a>
             </div>
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('subscriptionChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Monthly Plan', 'Yearly Plan'],
+                datasets: [{
+                    label: 'Total Subscriptions',
+                    data: [@Model.MonthlyCount, @Model.YearlyCount],
+                    backgroundColor: [
+                        'rgba(167, 212, 23, 0.7)',
+                        'rgba(167, 212, 23, 1)'
+                    ],
+                    borderColor: '#a7d417',
+                    borderWidth: 1,
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: 'rgba(255, 255, 255, 0.7)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: 'rgba(255, 255, 255, 0.7)'
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
 
 <style>
     /* Ensure the lower-grid works well for SA dash */

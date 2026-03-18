@@ -11,5 +11,6 @@ namespace ThrdCtrl2.Models
         public string Password { get; set; } = string.Empty;
         public string Status { get; set; } = "Active";
         public string? RoleName { get; set; }
+        public string? CompanyStatus { get; set; }
     }
 }

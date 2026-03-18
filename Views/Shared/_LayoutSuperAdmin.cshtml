@@ -14,11 +14,11 @@
         .app-container { display: flex; height: 100vh; transition: all 0.3s ease; }
         
         /* Sidebar Styles (Matching Dashboard) */
-        .sidebar { display: flex; flex-direction: column; width: 250px; background: #75911c; color: black !important; transition: all 0.3s ease; z-index: 1000; border-right: 1px solid rgba(0,0,0,0.1); }
+        .sidebar { display: flex; flex-direction: column; width: 250px; background: #131211; color: #ffffff; transition: all 0.3s ease; z-index: 1000; border-right: 1px solid rgba(255,255,255,0.05); padding: 10px; }
         .sidebar-nav { flex: 1; overflow-y: auto; }
-        .sidebar a { display: block; color: black !important; padding: 12px 20px; text-decoration: none; transition: background 0.2s; border-left: 3px solid transparent; }
-        .sidebar a:hover { background: rgba(0,0,0,0.1); }
-        .sidebar a.active { background: rgba(0,0,0,0.15); border-left-color: #000; font-weight: 600; }
+        .sidebar a { display: block; color: #ffffff; padding: 12px 20px; text-decoration: none; transition: all 0.2s; border-radius: 8px; margin: 4px 0; }
+        .sidebar a:hover:not(.active) { background: rgba(255, 255, 255, 0.1); color: #ffffff; }
+        .sidebar a.active { background: #a7d417; color: #000000 !important; font-weight: 600; }
         
         .logout-section { padding: 20px; border-top: 1px solid rgba(0,0,0,0.1); }
         
@@ -51,23 +51,27 @@
             <div class="logo-main ms-4 mt-2 mb-2">
                 <div class="d-flex justify-content-between align-items-center">
                     <img src="~/images/logo.png" alt="Logo" style="max-width: 150px;" />
-                    <button class="btn d-lg-none text-black" id="closeSidebar">
+                    <button class="btn d-lg-none text-white" id="closeSidebar">
                         <i class="bi bi-x-lg"></i>
                     </button>
                 </div>
-                <div class="mt-1 small fw-bold text-black-50" style="font-size: 0.7rem; letter-spacing: 1px; text-transform: uppercase;">
+                <div class="mt-1 small fw-bold text-white-50" style="font-size: 0.7rem; letter-spacing: 1px; text-transform: uppercase;">
                     Platform Console
                 </div>
             </div>
 
             <div class="sidebar-nav">
-                <a asp-action="SuperAdminDashboard" class="@(ViewContext.RouteData.Values["action"]?.ToString() == "SuperAdminDashboard" ? "active" : "")">
+                @{
+                    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+                    bool IsActive(string action) => string.Equals(currentAction, action, StringComparison.OrdinalIgnoreCase);
+                }
+                <a asp-action="SuperAdminDashboard" class="@(IsActive("SuperAdminDashboard") ? "active" : "")">
                     <i class="bi bi-speedometer2 me-2"></i> Dashboard
                 </a>
-                <a asp-action="Companies" class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Companies" ? "active" : "")">
-                    <i class="bi bi-building me-2"></i> Companies
+                <a asp-action="Companies" class="@(IsActive("Companies") ? "active" : "")">
+                    <i class="bi bi-credit-card-fill me-2"></i> Subscriptions
                 </a>
-                <a asp-action="AllUsers" class="@(ViewContext.RouteData.Values["action"]?.ToString() == "AllUsers" ? "active" : "")">
+                <a asp-action="AllUsers" class="@(IsActive("AllUsers") ? "active" : "")">
                     <i class="bi bi-people-fill me-2"></i> All Users
                 </a>
             </div>

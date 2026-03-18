@@ -11,5 +11,11 @@ namespace ThrdCtrl2.Models
         public int TotalUsers { get; set; }
         public int ActiveUsers { get; set; }
         public int InactiveUsers { get; set; }
+
+        // Pagination
+        public int CurrentPage { get; set; }
+        public int TotalPages { get; set; }
+        public int PageSize { get; set; } = 15;
+        public int TotalItems { get; set; }
     }
 }

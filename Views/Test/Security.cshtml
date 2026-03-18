@@ -1,15 +1,13 @@
-﻿@{
+﻿@model ThrdCtrl2.Models.SecurityViewModel
+@{
     ViewData["Title"] = "Security & Audit";
     Layout = "_LayoutDashboard";
 }
-
-
 
 <div class="dashboard">
 
     <!-- HEADER -->
     <div class="overview-header">
-
         <div>
             <h1>Security & Audit Monitoring</h1>
             <p class="overview-sub">
@@ -17,80 +15,86 @@
             </p>
         </div>
         <div class="overview-actions">
-            <button class="btn-outline"><i class="bi bi-file-earmark-fill"></i> Export Logs</button>
-            <button class="btn-primary"><i class="bi bi-arrow-clockwise"></i> Refresh Data</button>
+            <a href="@Url.Action("SecurityReport", "Test", new { userId = Model.SelectedUserId, module = Model.SelectedModule })" 
+               target="_blank" class="btn-outline text-decoration-none">
+                <i class="bi bi-file-earmark-bar-graph-fill"></i> Export Formal PDF
+            </a>
+            <button class="btn-primary" onclick="location.reload()"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
         </div>
-
     </div>
-
 
     <!-- CARDS BELOW -->
     <div class="cards-grid">
-
         <div class="card">
-            <div class="stat-label">Failed Logins (24v)</div>
-            <div class="stat-value">12</div>
-            <div class="stat-label"><i class="bi bi-file-earmark-spreadsheet-fill"></i>+3 from yesterday</div>
-
+            <div class="stat-label">Failed Logins (24h)</div>
+            <div class="stat-value">@Model.Stats.FailedLogins24h</div>
+            <div class="stat-label"><i class="bi bi-shield-lock"></i> Security Monitoring</div>
         </div>
 
         <div class="card">
-            <div class="stat-label">Active Session</div>
-            <div class="stat-value">8</div>
+            <div class="stat-label">Active Sessions</div>
+            <div class="stat-value">@Model.Stats.ActiveSessions</div>
             <div class="stat-label">Stable</div>
         </div>
 
         <div class="card">
-            <div class="stat-label">Data Modification</div>
-            <div class="stat-value">145</div>
-            <div class="stat-label"><i class="bi bi-arrow-down-left"></i>-12% average volume</div>
+            <div class="stat-label">Data Modifications</div>
+            <div class="stat-value">@Model.Stats.DataModifications24h</div>
+            <div class="stat-label">Last 24 hours</div>
         </div>
 
         <div class="card">
             <div class="stat-label">Security Alerts</div>
-            <div class="stat-value">2</div>
+            <div class="stat-value">@Model.Stats.SecurityAlerts</div>
             <div class="stat-label">Critical Events</div>
         </div>
-
-
     </div>
 
-
     <!-- FILTER BAR -->
-    <div class="filter-bar">
-
+    <form method="get" class="filter-bar">
         <div class="filter-group">
             <label>User</label>
-            <select class="filter-input">
-                <option>All Users</option>
+            <select name="userId" class="filter-input">
+                <option value="">All Users</option>
+                @foreach (var user in Model.Users)
+                {
+                    @if (Model.SelectedUserId == user.UserID)
+                    {
+                        <option value="@user.UserID" selected>@user.FullName</option>
+                    }
+                    else
+                    {
+                        <option value="@user.UserID">@user.FullName</option>
+                    }
+                }
             </select>
         </div>
 
         <div class="filter-group">
             <label>Module</label>
-            <select class="filter-input">
-                <option>All Modules</option>
+            <select name="module" class="filter-input">
+                @foreach (var mod in Model.Modules)
+                {
+                    @if (Model.SelectedModule == mod)
+                    {
+                        <option value="@mod" selected>@mod</option>
+                    }
+                    else
+                    {
+                        <option value="@mod">@mod</option>
+                    }
+                }
             </select>
         </div>
-        <div class="filter-group">
-            <label>Date Range</label>
-            <select class="filter-input">
-                <option>dd/mm/yyyy</option>
-            </select>
-        </div>
-
 
         <div class="filter-group mt-2">
-            <button class="btn-primary-small">Apply Filters</button>
+            <button type="submit" class="btn-primary-small">Apply Filters</button>
         </div>
-
-    </div>
+    </form>
 
     <!-- LOWER SECTION -->
     <div class="lower-grid-inv">
-
         <div class="table-card-big">
-
             <div class="table-responsive">
                 <table class="inventory-table">
                     <thead>
@@ -99,65 +103,82 @@
                             <th>User</th>
                             <th>Action</th>
                             <th>Module</th>
-                            <th>Details (Old → New)</th>
-                            <th>IP Adress</th>
-
+                            <th>Details</th>
+                            <th>IP Address</th>
                         </tr>
                     </thead>
-
                     <tbody>
-
-                        <tr>
-                            <td>Oct 26, 14:32:01</td>
-                            <td>Fhiona Domini</td>
-                            <td>Stock Adjustment</td>
-                            <td><span class="status-green">Super Admin</span></td>
-                            <td>QTY: 50 → 45 (Reason: Damage)</span></td>
-                            <td>192.168.1.101</td>
-
-                        </tr>
-
-                        <tr>
-                            <td>Oct 26, 14:36:01</td>
-                            <td>Armin Golilat</td>
-                            <td>Stock Adjustment</td>
-                            <td><span class="status-green">Super Admin</span></td>
-                            <td>QTY: 50 → 45 (Reason: Damage)</span></td>
-                            <td>192.168.1.102</td>
-                        </tr>
-
-                        <tr>
-                            <td>Oct 26, 14:32:01</td>
-                            <td>Fhiona Domini</td>
-                            <td>Stock Adjustment</td>
-                            <td><span class="status-green">Super Admin</span></td>
-                            <td>QTY: 50 → 45 (Reason: Damage)</span></td>
-                            <td>192.168.1.101</td>
-                        </tr>
-
-
-
+                        @if (Model.Logs.Any())
+                        {
+                            foreach (var log in Model.Logs)
+                            {
+                                <tr>
+                                    <td>@log.Timestamp.ToString("MMM dd, HH:mm:ss")</td>
+                                    <td>@(log.UserFullName ?? "System")</td>
+                                    <td>@log.Action</td>
+                                    <td>
+                                        <span class="status-green">@log.Module</span>
+                                    </td>
+                                    <td>@log.Details</td>
+                                    <td>@log.IPAddress</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 20px;">No audit logs found.</td>
+                            </tr>
+                        }
                     </tbody>
                 </table>
             </div>
             <!-- TABLE FOOTER -->
             <div class="table-footer">
-                <div>Showing 1–6 of 24 Users</div>
+                <div>Showing @Model.Logs.Count of @Model.TotalItems Logs</div>
 
                 <div class="pagination">
-                    <button class="page-btn">‹</button>
-                    <button class="page-btn active">1</button>
-                    <button class="page-btn">2</button>
-                    <button class="page-btn">3</button>
-                    <button class="page-btn">4</button>
-                    <button class="page-btn">5</button>
-                    <button class="page-btn">›</button>
+                    @if (Model.CurrentPage > 1)
+                    {
+                        <a href="@Url.Action("Security", new { userId = Model.SelectedUserId, module = Model.SelectedModule, page = Model.CurrentPage - 1 })" class="page-btn">‹</a>
+                    }
+                    else
+                    {
+                        <button class="page-btn" disabled>‹</button>
+                    }
+
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        if (i == Model.CurrentPage)
+                        {
+                            <button class="page-btn active">@i</button>
+                        }
+                        else if (i <= 5 || i > Model.TotalPages - 2 || (i >= Model.CurrentPage - 1 && i <= Model.CurrentPage + 1))
+                        {
+                            <a href="@Url.Action("Security", new { userId = Model.SelectedUserId, module = Model.SelectedModule, page = i })" class="page-btn">@i</a>
+                        }
+                        else if (i == 6 && Model.TotalPages > 8)
+                        {
+                            <span class="page-btn">...</span>
+                        }
+                    }
+
+                    @if (Model.CurrentPage < Model.TotalPages)
+                    {
+                        <a href="@Url.Action("Security", new { userId = Model.SelectedUserId, module = Model.SelectedModule, page = Model.CurrentPage + 1 })" class="page-btn">›</a>
+                    }
+                    else
+                    {
+                        <button class="page-btn" disabled>›</button>
+                    }
                 </div>
             </div>
-
         </div>
-
     </div>
-
 </div>
 
+<script>
+    function exportLogs() {
+        alert("Exporting logs feature coming soon! (CSV/PDF)");
+    }
+</script>

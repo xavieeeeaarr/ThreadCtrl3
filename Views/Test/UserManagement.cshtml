@@ -55,6 +55,7 @@
             <table class="inventory-table">
                 <thead>
                     <tr>
+                        <th style="width: 50px;">#</th>
                         <th>Full Name</th>
                         <th>Email Address</th>
                         <th>Role</th>
@@ -65,9 +66,11 @@
                 <tbody>
                     @if (Model.Users != null && Model.Users.Any())
                     {
+                        int index = (Model.CurrentPage - 1) * Model.PageSize + 1;
                         @foreach (var u in Model.Users)
                         {
                             <tr>
+                                <td class="text-white-50 small">@index</td>
                                 <td>
                                     <div class="product-cell">
                                         <div class="product-name">@u.FullName</div>
@@ -99,16 +102,58 @@
                                     }
                                 </td>
                             </tr>
+                            index++;
                         }
                     }
                     else
                     {
                         <tr>
-                            <td colspan="5" class="text-center py-4">No users found.</td>
+                            <td colspan="6" class="text-center py-5 text-white-50">
+                                <i class="bi bi-people fs-1 d-block mb-2"></i>
+                                No users found.
+                            </td>
                         </tr>
                     }
                 </tbody>
             </table>
+        </div>
+
+        <!-- TABLE FOOTER -->
+        <div class="table-footer">
+            <div class="text-white-50 small">
+                Showing @(Model.TotalItems == 0 ? 0 : (Model.CurrentPage - 1) * Model.PageSize + 1) to @(Math.Min(Model.CurrentPage * Model.PageSize, Model.TotalItems)) of @Model.TotalItems entries
+            </div>
+            <div class="pagination">
+                @if (Model.CurrentPage > 1)
+                {
+                    <a class="page-btn" href="@Url.Action("UserManagement", new { page = Model.CurrentPage - 1, status = Model.CurrentFilter })">‹</a>
+                }
+                else
+                {
+                    <button class="page-btn disabled" disabled>‹</button>
+                }
+
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    if (i == Model.CurrentPage)
+                    {
+                        <button class="page-btn active">@i</button>
+                    }
+                    else
+                    {
+                        <a class="page-btn" href="@Url.Action("UserManagement", new { page = i, status = Model.CurrentFilter })">@i</a>
+                    }
+                }
+
+                @if (Model.CurrentPage < Model.TotalPages)
+                {
+                    <a class="page-btn" href="@Url.Action("UserManagement", new { page = Model.CurrentPage + 1, status = Model.CurrentFilter })">›</a>
+                }
+                else
+                {
+                    <button class="page-btn disabled" disabled>›</button>
+                }
+            </div>
         </div>
     </div>
 
@@ -116,45 +161,47 @@
 
 <!-- New User Modal -->
 <div class="modal fade" id="newUserModal" tabindex="-1" aria-labelledby="newUserModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title text-black" id="newUserModalLabel">Create New User</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title" id="newUserModalLabel"><i class="bi bi-person-plus-fill me-2"></i>Create New User</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form asp-controller="Users" asp-action="Create" method="post">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label text-black">Full Name</label>
-                        <input type="text" name="FullName" class="form-control" placeholder="Enter full name" autocomplete="off" required />
+                        <label class="form-label text-white-50 small">Full Name</label>
+                        <input type="text" name="FullName" class="form-control bg-black text-white border-secondary" placeholder="Enter full name" autocomplete="off" required />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label text-black">Email Address</label>
-                        <input type="email" name="Email" class="form-control" placeholder="name@example.com" autocomplete="off" required />
+                        <label class="form-label text-white-50 small">Email Address</label>
+                        <input type="email" name="Email" class="form-control bg-black text-white border-secondary" placeholder="name@example.com" autocomplete="off" required />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label text-black">Password</label>
-                        <input type="password" name="Password" class="form-control" placeholder="Create password" autocomplete="new-password" required />
+                        <label class="form-label text-white-50 small">Password</label>
+                        <input type="password" name="Password" class="form-control bg-black text-white border-secondary" placeholder="Create password" autocomplete="new-password" required />
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label text-black">Assign Role</label>
-                        <select name="RoleID" class="form-select">
-                            @foreach (var r in Model.Roles)
-                            {
-                                <option value="@r.RoleID">@r.RoleName</option>
-                            }
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label text-black">Account Status</label>
-                        <select name="Status" class="form-select">
-                            <option value="Active">Active</option>
-                            <option value="Inactive">Inactive</option>
-                        </select>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-white-50 small">Assign Role</label>
+                            <select name="RoleID" class="form-select bg-black text-white border-secondary">
+                                @foreach (var r in Model.Roles)
+                                {
+                                    <option value="@r.RoleID">@r.RoleName</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-white-50 small">Account Status</label>
+                            <select name="Status" class="form-select bg-black text-white border-secondary">
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
                     <button type="submit" class="btn btn-primary">Create User</button>
                 </div>
             </form>
@@ -168,58 +215,60 @@
     @foreach (var u in Model.Users)
     {
         <div class="modal fade" id="editUserModal-@u.UserID" tabindex="-1" aria-labelledby="editUserModalLabel-@u.UserID" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title text-black" id="editUserModalLabel-@u.UserID">Edit User: @u.FullName</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content bg-dark text-white border-secondary">
+                    <div class="modal-header border-secondary">
+                        <h5 class="modal-title" id="editUserModalLabel-@u.UserID"><i class="bi bi-pencil-square me-2"></i>Edit User: @u.FullName</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <form asp-controller="Users" asp-action="Edit" method="post">
                         <input type="hidden" name="UserID" value="@u.UserID" />
                         <input type="hidden" name="Password" value="@u.Password" />
                         <div class="modal-body">
                             <div class="mb-3">
-                                <label class="form-label text-black">Full Name</label>
-                                <input type="text" name="FullName" class="form-control" value="@u.FullName" required />
+                                <label class="form-label text-white-50 small">Full Name</label>
+                                <input type="text" name="FullName" class="form-control bg-black text-white border-secondary" value="@u.FullName" required />
                             </div>
                             <div class="mb-3">
-                                <label class="form-label text-black">Email</label>
-                                <input type="email" name="Email" class="form-control" value="@u.Email" required />
+                                <label class="form-label text-white-50 small">Email</label>
+                                <input type="email" name="Email" class="form-control bg-black text-white border-secondary" value="@u.Email" required />
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label text-black">Role</label>
-                                <select name="RoleID" class="form-select">
-                                    @foreach (var r in Model.Roles)
-                                    {
-                                        if (r.RoleID == u.RoleID)
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label text-white-50 small">Role</label>
+                                    <select name="RoleID" class="form-select bg-black text-white border-secondary">
+                                        @foreach (var r in Model.Roles)
                                         {
-                                            <option value="@r.RoleID" selected>@r.RoleName</option>
+                                            if (r.RoleID == u.RoleID)
+                                            {
+                                                <option value="@r.RoleID" selected>@r.RoleName</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@r.RoleID">@r.RoleName</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-white-50 small">Status</label>
+                                    <select name="Status" class="form-select bg-black text-white border-secondary">
+                                        @if (u.Status == "Active")
+                                        {
+                                            <option value="Active" selected>Active</option>
+                                            <option value="Inactive">Inactive</option>
                                         }
                                         else
                                         {
-                                            <option value="@r.RoleID">@r.RoleName</option>
+                                            <option value="Active">Active</option>
+                                            <option value="Inactive" selected>Inactive</option>
                                         }
-                                    }
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label text-black">Status</label>
-                                <select name="Status" class="form-select">
-                                    @if (u.Status == "Active")
-                                    {
-                                        <option value="Active" selected>Active</option>
-                                        <option value="Inactive">Inactive</option>
-                                    }
-                                    else
-                                    {
-                                        <option value="Active">Active</option>
-                                        <option value="Inactive" selected>Inactive</option>
-                                    }
-                                </select>
+                                    </select>
+                                </div>
                             </div>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <div class="modal-footer border-secondary">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
                             <button type="submit" class="btn btn-primary">Save Changes</button>
                         </div>
                     </form>
@@ -236,24 +285,24 @@
     {
         @if (u.Status == "Active")
         {
-            <div class="modal fade" id="archiveUserModal-@u.UserID" tabindex="-1" aria-labelledby="archiveUserModalLabel-@u.UserID" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title text-black" id="archiveUserModalLabel-@u.UserID">Archive User</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body text-black">
-                            Are you sure you want to archive <strong>@u.FullName</strong>? 
-                            The user status will be changed to Inactive.
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <form asp-controller="Users" asp-action="Archive" method="post">
-                                <input type="hidden" name="userId" value="@u.UserID" />
-                                <button type="submit" class="btn btn-warning">Yes, Archive</button>
-                            </form>
-                        </div>
+        <div class="modal fade" id="archiveUserModal-@u.UserID" tabindex="-1" aria-labelledby="archiveUserModalLabel-@u.UserID" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content bg-dark text-white border-secondary">
+                    <div class="modal-header border-secondary">
+                        <h5 class="modal-title" id="archiveUserModalLabel-@u.UserID"><i class="bi bi-archive-fill me-2"></i>Archive User</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure you want to archive <strong>@u.FullName</strong>? 
+                        The user status will be changed to Inactive.
+                    </div>
+                    <div class="modal-footer border-secondary">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <form asp-controller="Users" asp-action="Archive" method="post" class="d-inline">
+                            <input type="hidden" name="userId" value="@u.UserID" />
+                            <button type="submit" class="btn btn-warning">Yes, Archive</button>
+                        </form>
+                    </div>
                     </div>
                 </div>
             </div>
@@ -261,11 +310,6 @@
     }
 }
 <style>
-    /* Ensure modal text is readable */
-    .modal-title, .form-label {
-        color: #333 !important;
-    }
-    
     .table-card-big {
         background: #1a1a1a;
         padding: 24px;
@@ -282,11 +326,25 @@
     .inventory-table th {
         color: #a0a0a0;
         border-bottom: 1px solid #333;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
     }
 
     .inventory-table td {
         border-bottom: 1px solid #333;
         color: #e0e0e0;
+        vertical-align: middle;
+    }
+
+    .product-cell {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .product-name {
+        font-weight: 600;
+        color: #fff;
     }
 </style>
 

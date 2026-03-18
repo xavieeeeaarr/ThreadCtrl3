@@ -5,6 +5,7 @@ namespace ThrdCtrl2.Models
         public int CompanyID { get; set; }
         public string CompanyName { get; set; } = string.Empty;
         public string Status { get; set; } = "Active";
+        public string SubscriptionType { get; set; } = "Monthly";
         public int UserCount { get; set; }
     }
 }

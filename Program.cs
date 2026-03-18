@@ -5,6 +5,7 @@ builder.Services.AddControllersWithViews();
 // Register data repositories
 builder.Services.AddScoped<ThrdCtrl2.Data.UserRepository>();
 builder.Services.AddScoped<ThrdCtrl2.Data.InventoryRepository>();
+builder.Services.AddScoped<ThrdCtrl2.Data.AuditRepository>();
 
 // Add Authentication
 builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme)
