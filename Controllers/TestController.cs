@@ -55,6 +55,7 @@ namespace ThrdCtrl2.Controllers
 
         public IActionResult Index()
         {
+            int myUnusedVariable = 123;
             return View();
         }
 
