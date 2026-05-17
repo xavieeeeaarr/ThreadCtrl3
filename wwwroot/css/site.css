@@ -705,6 +705,38 @@ tbody tr {
     color: #ffffff;
 }
 
+.filter-input-alt {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid #444;
+    background: #2a2a2a;
+    color: #ffffff;
+    font-size: 13px;
+    min-width: 180px;
+    outline: none;
+}
+
+.filter-input-alt:focus {
+    border-color: var(--primary);
+}
+
+.btn-outline-small {
+    padding: 6px 16px;
+    border: 1px solid #444;
+    background: transparent;
+    color: #ffffff;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.btn-outline-small:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
 .cards-grid small {
     margin-top: 6px;
     display: block;

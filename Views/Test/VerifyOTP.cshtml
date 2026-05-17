@@ -1,0 +1,38 @@
+@{
+    ViewData["Title"] = "Verify Code";
+}
+
+<div class="page-wrapper">
+    <div class="reg-container">
+        <div class="reg-card">
+            <div class="logo-area">
+                <div class="logo-icon">
+                    <img src="~/images/icon.png" alt="Logo" />
+                </div>
+                <div class="system-name">Verification</div>
+                <div class="subtitle">Please enter the 6-digit code sent to your email</div>
+            </div>
+
+            @if (TempData["Message"] != null)
+            {
+                <div class="alert alert-info">@TempData["Message"]</div>
+            }
+
+            <form asp-action="VerifyOTP" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="form-floating mb-3">
+                    <input type="text" name="otpCode" class="form-control text-center" style="font-size: 2rem; letter-spacing: 0.5rem;" maxlength="6" autocomplete="off" required autofocus />
+                    <label class="form-label-black">Verification Code</label>
+                </div>
+
+                <button type="submit" class="w-100 btn btn-lg btn-primary">Verify & Proceed</button>
+
+                <div class="subtitle-link text-white mt-3 text-center">
+                    <p>Didn't receive the code? <a href="#" onclick="location.reload();">Resend</a></p>
+                    <p><a asp-action="Login">Back to Login</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

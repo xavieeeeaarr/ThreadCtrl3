@@ -1,7 +1,7 @@
 @model ThrdCtrl2.Models.SecurityViewModel
 @{
-    ViewData["Title"] = "Security & Audit";
-    Layout = "_LayoutDashboard";
+    ViewData["Title"] = "Global Security & Audit";
+    Layout = "_LayoutSuperAdmin";
 }
 
 <div class="dashboard">
@@ -9,64 +9,35 @@
     <!-- HEADER -->
     <div class="overview-header">
         <div>
-            <h1>Security & Audit Monitoring</h1>
+            <h1>Global Security & Audit</h1>
             <p class="overview-sub">
-                Track user activities, system changes, and security events.
+                Monitoring system-wide movements across all companies.
             </p>
         </div>
         <div class="overview-actions">
-            <a href="@Url.Action("SecurityReport", "Test", new { userId = Model.SelectedUserId, module = Model.SelectedModule, roleName = Model.SelectedRole, actionName = Model.SelectedAction })" 
-               target="_blank" class="btn-outline text-decoration-none">
-                <i class="bi bi-file-earmark-bar-graph-fill"></i> Export Formal PDF
-            </a>
             <button class="btn-primary" onclick="location.reload()"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
-        </div>
-    </div>
-
-    <!-- CARDS BELOW -->
-    <div class="cards-grid">
-        <div class="card">
-            <div class="stat-label">Failed Logins (24h)</div>
-            <div class="stat-value">@Model.Stats.FailedLogins24h</div>
-            <div class="stat-label"><i class="bi bi-shield-lock"></i> Security Monitoring</div>
-        </div>
-
-        <div class="card">
-            <div class="stat-label">Active Sessions</div>
-            <div class="stat-value">@Model.Stats.ActiveSessions</div>
-            <div class="stat-label">Stable</div>
-        </div>
-
-        <div class="card">
-            <div class="stat-label">Data Modifications</div>
-            <div class="stat-value">@Model.Stats.DataModifications24h</div>
-            <div class="stat-label">Last 24 hours</div>
-        </div>
-
-        <div class="card">
-            <div class="stat-label">Security Alerts</div>
-            <div class="stat-value">@Model.Stats.SecurityAlerts</div>
-            <div class="stat-label">Critical Events</div>
         </div>
     </div>
 
     <!-- LOWER SECTION -->
     <div class="lower-grid-inv">
         <div class="table-card-big">
+            
             <!-- INLINE FILTERS -->
             <form method="get" class="d-flex align-items-end gap-3 mb-4 p-2 border-bottom border-secondary pb-4">
                 <div class="filter-group">
-                    <label class="small text-white-50">Filter by Module</label>
-                    <select name="module" class="filter-input-alt">
-                        @foreach (var mod in Model.Modules)
+                    <label class="small text-white-50">Filter by Company</label>
+                    <select name="companyId" class="filter-input-alt">
+                        <option value="">All Companies</option>
+                        @foreach (var comp in Model.Companies)
                         {
-                            @if (Model.SelectedModule == mod)
+                            @if (Model.SelectedCompanyId == comp.CompanyID)
                             {
-                                <option value="@mod" selected>@mod</option>
+                                <option value="@comp.CompanyID" selected>@comp.CompanyName</option>
                             }
                             else
                             {
-                                <option value="@mod">@mod</option>
+                                <option value="@comp.CompanyID">@comp.CompanyName</option>
                             }
                         }
                     </select>
@@ -90,13 +61,15 @@
                 </div>
 
                 <button type="submit" class="btn-primary-small">Apply Filters</button>
-                <a href="@Url.Action("Security")" class="btn-outline-small text-decoration-none">Reset</a>
+                <a href="@Url.Action("GlobalSecurity")" class="btn-outline-small text-decoration-none">Reset</a>
             </form>
+
             <div class="table-responsive">
                 <table class="inventory-table">
                     <thead>
                         <tr>
                             <th>Timestamp</th>
+                            <th>Company</th>
                             <th>User</th>
                             <th>Role</th>
                             <th>Action</th>
@@ -111,12 +84,13 @@
                             foreach (var log in Model.Logs)
                             {
                                 <tr>
-                                    <td>@log.Timestamp.ToString("MMM dd, HH:mm:ss")</td>
+                                    <td>@log.Timestamp.ToString("MMM dd, HH:mm")</td>
+                                    <td class="fw-bold text-primary">@log.CompanyName</td>
                                     <td>@(log.UserFullName ?? "System")</td>
                                     <td class="text-white-50 small">@(log.RoleName ?? "System")</td>
                                     <td class="fw-bold">@log.Action</td>
                                     <td>
-                                        <span class="status-green">@log.Module</span>
+                                        <span class="status-blue">@log.Module</span>
                                     </td>
                                     <td>@log.Details</td>
                                     <td class="small">@log.IPAddress</td>
@@ -126,58 +100,41 @@
                         else
                         {
                             <tr>
-                                <td colspan="7" style="text-align: center; padding: 20px;">No audit logs found.</td>
+                                <td colspan="8" style="text-align: center; padding: 20px;">No global audit logs found.</td>
                             </tr>
                         }
                     </tbody>
                 </table>
             </div>
+
             <!-- TABLE FOOTER -->
             <div class="table-footer">
-                <div>Showing @Model.Logs.Count of @Model.TotalItems Logs</div>
+                <div>Showing @Model.Logs.Count logs</div>
 
                 <div class="pagination">
                     @if (Model.CurrentPage > 1)
                     {
-                        <a href="@Url.Action("Security", new { userId = Model.SelectedUserId, module = Model.SelectedModule, roleName = Model.SelectedRole, actionName = Model.SelectedAction, page = Model.CurrentPage - 1 })" class="page-btn">‹</a>
+                        <a href="@Url.Action("GlobalSecurity", new { companyId = Model.SelectedCompanyId, roleName = Model.SelectedRole, page = Model.CurrentPage - 1 })" class="page-btn">‹</a>
                     }
-                    else
-                    {
-                        <button class="page-btn" disabled>‹</button>
-                    }
-
+                    
                     @for (int i = 1; i <= Model.TotalPages; i++)
                     {
                         if (i == Model.CurrentPage)
                         {
                             <button class="page-btn active">@i</button>
                         }
-                        else if (i <= 5 || i > Model.TotalPages - 2 || (i >= Model.CurrentPage - 1 && i <= Model.CurrentPage + 1))
+                        else if (i <= 5 || i > Model.TotalPages - 2)
                         {
-                            <a href="@Url.Action("Security", new { userId = Model.SelectedUserId, module = Model.SelectedModule, roleName = Model.SelectedRole, actionName = Model.SelectedAction, page = i })" class="page-btn">@i</a>
-                        }
-                        else if (i == 6 && Model.TotalPages > 8)
-                        {
-                            <span class="page-btn">...</span>
+                            <a href="@Url.Action("GlobalSecurity", new { companyId = Model.SelectedCompanyId, roleName = Model.SelectedRole, page = i })" class="page-btn">@i</a>
                         }
                     }
 
                     @if (Model.CurrentPage < Model.TotalPages)
                     {
-                        <a href="@Url.Action("Security", new { userId = Model.SelectedUserId, module = Model.SelectedModule, roleName = Model.SelectedRole, actionName = Model.SelectedAction, page = Model.CurrentPage + 1 })" class="page-btn">›</a>
-                    }
-                    else
-                    {
-                        <button class="page-btn" disabled>›</button>
+                        <a href="@Url.Action("GlobalSecurity", new { companyId = Model.SelectedCompanyId, roleName = Model.SelectedRole, page = Model.CurrentPage + 1 })" class="page-btn">›</a>
                     }
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<script>
-    function exportLogs() {
-        alert("Exporting logs feature coming soon! (CSV/PDF)");
-    }
-</script>

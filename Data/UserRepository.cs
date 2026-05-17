@@ -17,7 +17,7 @@ namespace ThrdCtrl2.Data
                 ?? throw new InvalidOperationException("DefaultConnection not found in configuration.");
         }
 
-        private DbConnection GetConnection()
+        private Microsoft.Data.SqlClient.SqlConnection GetConnection()
         {
             return new Microsoft.Data.SqlClient.SqlConnection(_connectionString);
         }
@@ -99,8 +99,9 @@ namespace ThrdCtrl2.Data
         {
             using var conn = GetConnection();
             using var cmd = conn.CreateCommand();
-            cmd.CommandText = @"SELECT u.UserID, u.RoleID, u.FullName, u.CompanyID, c.CompanyName, u.Email, u.Password, u.Status 
+            cmd.CommandText = @"SELECT u.*, r.RoleName, c.CompanyName, c.Status as CompanyStatus
                                 FROM dbo.Users u 
+                                LEFT JOIN dbo.Roles r ON u.RoleID = r.RoleID
                                 LEFT JOIN dbo.Companies c ON u.CompanyID = c.CompanyID 
                                 WHERE u.UserID = @id";
             var pId = cmd.CreateParameter(); pId.ParameterName = "@id"; pId.Value = id; cmd.Parameters.Add(pId);
@@ -110,14 +111,18 @@ namespace ThrdCtrl2.Data
             {
                 return new User
                 {
-                    UserID = rdr.GetInt32(0),
-                    RoleID = rdr.GetInt32(1),
-                    FullName = rdr.GetString(2),
-                    CompanyID = rdr.IsDBNull(3) ? null : (int?)rdr.GetInt32(3),
-                    CompanyName = rdr.IsDBNull(4) ? null : rdr.GetString(4),
-                    Email = rdr.GetString(5),
-                    Password = rdr.GetString(6),
-                    Status = rdr.GetString(7)
+                    UserID = rdr.GetInt32(rdr.GetOrdinal("UserID")),
+                    RoleID = rdr.GetInt32(rdr.GetOrdinal("RoleID")),
+                    FullName = rdr.GetString(rdr.GetOrdinal("FullName")),
+                    CompanyID = rdr.IsDBNull(rdr.GetOrdinal("CompanyID")) ? null : (int?)rdr.GetInt32(rdr.GetOrdinal("CompanyID")),
+                    CompanyName = rdr.IsDBNull(rdr.GetOrdinal("CompanyName")) ? null : rdr.GetString(rdr.GetOrdinal("CompanyName")),
+                    Email = rdr.GetString(rdr.GetOrdinal("Email")),
+                    Password = rdr.GetString(rdr.GetOrdinal("Password")),
+                    Status = rdr.GetString(rdr.GetOrdinal("Status")),
+                    RoleName = rdr.IsDBNull(rdr.GetOrdinal("RoleName")) ? null : rdr.GetString(rdr.GetOrdinal("RoleName")),
+                    CompanyStatus = rdr.IsDBNull(rdr.GetOrdinal("CompanyStatus")) ? null : rdr.GetString(rdr.GetOrdinal("CompanyStatus")),
+                    AccessFailedCount = rdr.IsDBNull(rdr.GetOrdinal("AccessFailedCount")) ? 0 : rdr.GetInt32(rdr.GetOrdinal("AccessFailedCount")),
+                    LockoutEnd = rdr.IsDBNull(rdr.GetOrdinal("LockoutEnd")) ? null : (DateTime?)rdr.GetDateTime(rdr.GetOrdinal("LockoutEnd"))
                 };
             }
             return null;
@@ -197,7 +202,9 @@ namespace ThrdCtrl2.Data
                     Email = rdr.GetString(rdr.GetOrdinal("Email")),
                     Password = rdr.GetString(rdr.GetOrdinal("Password")),
                     Status = rdr.GetString(rdr.GetOrdinal("Status")),
-                    RoleName = rdr.IsDBNull(rdr.GetOrdinal("RoleName")) ? null : rdr.GetString(rdr.GetOrdinal("RoleName"))
+                    RoleName = rdr.IsDBNull(rdr.GetOrdinal("RoleName")) ? null : rdr.GetString(rdr.GetOrdinal("RoleName")),
+                    AccessFailedCount = rdr.IsDBNull(rdr.GetOrdinal("AccessFailedCount")) ? 0 : rdr.GetInt32(rdr.GetOrdinal("AccessFailedCount")),
+                    LockoutEnd = rdr.IsDBNull(rdr.GetOrdinal("LockoutEnd")) ? null : (DateTime?)rdr.GetDateTime(rdr.GetOrdinal("LockoutEnd"))
                 };
 
                 try {
@@ -298,7 +305,26 @@ namespace ThrdCtrl2.Data
             var pId = cmd.CreateParameter(); pId.ParameterName = "@id"; pId.Value = id; cmd.Parameters.Add(pId);
             var pStatus = cmd.CreateParameter(); pStatus.ParameterName = "@status"; pStatus.Value = status; cmd.Parameters.Add(pStatus);
             conn.Open();
-            cmd.ExecuteNonQuery();
+            using var transaction = conn.BeginTransaction();
+            cmd.Transaction = transaction;
+            try {
+                // Update Company
+                cmd.CommandText = "UPDATE dbo.Companies SET Status = @status WHERE CompanyID = @id";
+                cmd.ExecuteNonQuery();
+
+                // Update all Users of that company
+                using var userCmd = (Microsoft.Data.SqlClient.SqlCommand)conn.CreateCommand();
+                userCmd.Transaction = (Microsoft.Data.SqlClient.SqlTransaction)transaction;
+                userCmd.CommandText = "UPDATE dbo.Users SET Status = @status WHERE CompanyID = @id";
+                userCmd.Parameters.AddWithValue("@id", id);
+                userCmd.Parameters.AddWithValue("@status", status);
+                userCmd.ExecuteNonQuery();
+
+                transaction.Commit();
+            } catch {
+                transaction.Rollback();
+                throw;
+            }
         }
 
         public SuperAdminDashboardViewModel GetSuperAdminDashboardStats()
@@ -439,6 +465,127 @@ namespace ThrdCtrl2.Data
             conn.Open();
             cmd.ExecuteNonQuery();
         }
+
+        public void CreateOTP(int userId, string code, string type)
+        {
+            using var conn = GetConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "INSERT INTO UserOTPs (UserID, OTPCode, Type, ExpiryTime) VALUES (@uid, @code, @type, @expiry)";
+            cmd.Parameters.AddWithValue("@uid", userId);
+            cmd.Parameters.AddWithValue("@code", code);
+            cmd.Parameters.AddWithValue("@type", type);
+            cmd.Parameters.AddWithValue("@expiry", DateTime.Now.AddMinutes(10));
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+
+        public bool VerifyOTP(int userId, string code, string type)
+        {
+            using var conn = GetConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "SELECT TOP 1 OTPID FROM UserOTPs WHERE UserID = @uid AND OTPCode = @code AND Type = @type AND IsUsed = 0 AND ExpiryTime > GETDATE() ORDER BY ExpiryTime DESC";
+            cmd.Parameters.AddWithValue("@uid", userId);
+            cmd.Parameters.AddWithValue("@code", code);
+            cmd.Parameters.AddWithValue("@type", type);
+            conn.Open();
+            var result = cmd.ExecuteScalar();
+            if (result != null)
+            {
+                using var updateCmd = conn.CreateCommand();
+                updateCmd.CommandText = "UPDATE UserOTPs SET IsUsed = 1 WHERE OTPID = @id";
+                updateCmd.Parameters.AddWithValue("@id", result);
+                updateCmd.ExecuteNonQuery();
+                return true;
+            }
+            return false;
+        }
+
+        public void CreatePasswordResetToken(int userId, string token)
+        {
+            using var conn = GetConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "INSERT INTO PasswordResetTokens (UserID, Token, ExpiryTime) VALUES (@uid, @token, @expiry)";
+            cmd.Parameters.AddWithValue("@uid", userId);
+            cmd.Parameters.AddWithValue("@token", token);
+            cmd.Parameters.AddWithValue("@expiry", DateTime.Now.AddHours(1));
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+
+        public int? VerifyPasswordResetToken(string token)
+        {
+            using var conn = GetConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "SELECT UserID FROM PasswordResetTokens WHERE Token = @token AND IsUsed = 0 AND ExpiryTime > GETDATE()";
+            cmd.Parameters.AddWithValue("@token", token);
+            conn.Open();
+            var result = cmd.ExecuteScalar();
+            return result != null ? (int?)result : null;
+        }
+
+        public void MarkTokenAsUsed(string token)
+        {
+            using var conn = GetConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "UPDATE PasswordResetTokens SET IsUsed = 1 WHERE Token = @token";
+            cmd.Parameters.AddWithValue("@token", token);
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+
+        public void UpdatePassword(int userId, string hashedPassword)
+        {
+            using var conn = GetConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "UPDATE dbo.Users SET Password = @pass WHERE UserID = @uid";
+            cmd.Parameters.AddWithValue("@pass", hashedPassword);
+            cmd.Parameters.AddWithValue("@uid", userId);
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+
+        public void SetUserStatus(int userId, string status)
+        {
+            using var conn = GetConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "UPDATE dbo.Users SET Status = @status WHERE UserID = @uid";
+            cmd.Parameters.AddWithValue("@status", status);
+            cmd.Parameters.AddWithValue("@uid", userId);
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+
+        public void IncrementAccessFailedCount(int userId)
+        {
+            using var conn = GetConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "UPDATE dbo.Users SET AccessFailedCount = AccessFailedCount + 1 WHERE UserID = @uid";
+            cmd.Parameters.AddWithValue("@uid", userId);
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+
+        public void ResetAccessFailedCount(int userId)
+        {
+            using var conn = GetConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "UPDATE dbo.Users SET AccessFailedCount = 0, LockoutEnd = NULL WHERE UserID = @uid";
+            cmd.Parameters.AddWithValue("@uid", userId);
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+
+        public void SetLockout(int userId, DateTime lockoutEnd)
+        {
+            using var conn = GetConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "UPDATE dbo.Users SET LockoutEnd = @end WHERE UserID = @uid";
+            cmd.Parameters.AddWithValue("@end", lockoutEnd);
+            cmd.Parameters.AddWithValue("@uid", userId);
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+
         public void MigrateDatabase()
         {
             using var conn = GetConnection();
@@ -463,6 +610,16 @@ namespace ThrdCtrl2.Data
             // Check for UserCount column
             if (!ColumnExists(conn, "dbo.Companies", "UserCount")) {
                 cmd.CommandText = "ALTER TABLE dbo.Companies ADD UserCount INT DEFAULT 0 WITH VALUES;";
+                cmd.ExecuteNonQuery();
+            }
+
+            // Check for Lockout columns
+            if (!ColumnExists(conn, "dbo.Users", "AccessFailedCount")) {
+                cmd.CommandText = "ALTER TABLE dbo.Users ADD AccessFailedCount INT DEFAULT 0 WITH VALUES;";
+                cmd.ExecuteNonQuery();
+            }
+            if (!ColumnExists(conn, "dbo.Users", "LockoutEnd")) {
+                cmd.CommandText = "ALTER TABLE dbo.Users ADD LockoutEnd DATETIME NULL;";
                 cmd.ExecuteNonQuery();
             }
         }

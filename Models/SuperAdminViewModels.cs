@@ -15,6 +15,7 @@ namespace ThrdCtrl2.Models
         public decimal TotalRevenue { get; set; }
         public List<Company> RecentCompanies { get; set; } = new();
         public List<User> RecentUsers { get; set; } = new();
+        public List<AuditLog> RecentAuditLogs { get; set; } = new();
     }
 
     public class CompanyManagementViewModel

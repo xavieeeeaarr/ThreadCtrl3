@@ -8,9 +8,28 @@ namespace ThrdCtrl2.Controllers
     public class UsersController : Controller
     {
         private readonly UserRepository _repo;
-        public UsersController(UserRepository repo)
+        private readonly AuditRepository _auditRepo;
+        public UsersController(UserRepository repo, AuditRepository auditRepo)
         {
             _repo = repo;
+            _auditRepo = auditRepo;
+        }
+
+        private void LogAction(string action, string details, int? targetUserId = null)
+        {
+            var cid = GetCurrentCompanyId();
+            var uidStr = User.FindFirst("UserID")?.Value;
+            int? uid = int.TryParse(uidStr, out int u) ? u : null;
+
+            _auditRepo.Log(new AuditLog
+            {
+                CompanyID = cid,
+                UserID = uid,
+                Action = action,
+                Module = "User Management",
+                Details = details + (targetUserId.HasValue ? $" (Target UserID: {targetUserId})" : ""),
+                IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+            });
         }
 
         private int? GetCurrentCompanyId()
@@ -38,7 +57,10 @@ namespace ThrdCtrl2.Controllers
 
             // Hash password before saving
             user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
-            _repo.CreateUser(user);
+            int newId = _repo.CreateUser(user);
+
+            LogAction("Create User", $"Created user: {user.FullName} ({user.Email})", newId);
+
             return RedirectToAction("UserManagement", "Test");
         }
 
@@ -64,6 +86,9 @@ namespace ThrdCtrl2.Controllers
             }
 
             _repo.UpdateUser(user);
+
+            LogAction("Update User", $"Updated profile/role for: {user.FullName}", user.UserID);
+
             return RedirectToAction("UserManagement", "Test");
         }
 
@@ -83,6 +108,9 @@ namespace ThrdCtrl2.Controllers
             }
 
             _repo.ArchiveUser(userId);
+
+            LogAction("Archive User", "Set user status to Inactive", userId);
+
             return RedirectToAction("UserManagement", "Test");
         }
     }

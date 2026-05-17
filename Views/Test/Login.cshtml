@@ -1,6 +1,7 @@
-﻿@{
+@{
     ViewData["Title"] = "Login";
 }
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 
 
 
@@ -28,6 +29,15 @@
             <form asp-action="Login" method="post">
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
+                @if (TempData["Message"] != null)
+                {
+                    <div class="alert alert-success">@TempData["Message"]</div>
+                }
+                @if (Context.Request.Query["error"].Count > 0)
+                {
+                    <div class="alert alert-danger">@Context.Request.Query["error"]</div>
+                }
+
                 <h1 style="color: white;" class="system-name">@ViewData["Title"] Here!</h1>
 
                 <div class="form-floating mb-3">
@@ -47,12 +57,16 @@
                     </label>
                 </div>
 
+                <div class="mb-3 d-flex justify-content-center">
+                    <div class="g-recaptcha" data-sitekey="@Configuration["ReCaptcha:SiteKey"]" data-theme="dark"></div>
+                </div>
+
                 <div>
                     <button type="submit" class="w-100 btn btn-lg btn-primary">Log In</button>
                 </div>
 
                 <div class="subtitle-link text-white mt-2">
-                    <p><a href="#">Forgot your password?</a></p>
+                    <p><a asp-action="ForgotPassword">Forgot your password?</a></p>
                     <p>Doesn't register your company yet? <a asp-action="Register" class="text-primary fw-bold">register here</a>.</p>
                 </div>
 
@@ -67,4 +81,5 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 }

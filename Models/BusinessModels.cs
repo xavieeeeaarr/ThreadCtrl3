@@ -162,6 +162,8 @@ namespace ThrdCtrl2.Models
         public int? CompanyID { get; set; }
         public int? UserID { get; set; }
         public string? UserFullName { get; set; }
+        public string? RoleName { get; set; }
+        public string? CompanyName { get; set; }
         public string Action { get; set; } = "";
         public string Module { get; set; } = "";
         public string? Details { get; set; }

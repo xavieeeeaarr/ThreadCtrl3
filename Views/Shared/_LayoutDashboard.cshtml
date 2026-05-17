@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -268,7 +268,11 @@
                     <a asp-controller="Test" asp-action="UserManagement" class="@(IsActive("UserManagement") ? "active" : "")"><i class="bi bi-person-fill-add"></i> User Management</a>
                 }
 
-                @if (User.IsInRole("Super Admin") || User.IsInRole("Company Admin") || User.IsInRole("Auditor"))
+                @if (User.IsInRole("Super Admin"))
+                {
+                    <a asp-controller="Test" asp-action="GlobalSecurity" class="@(IsActive("GlobalSecurity") ? "active" : "")"><i class="bi bi-globe"></i> Global Security</a>
+                }
+                else if (User.IsInRole("Company Admin") || User.IsInRole("Auditor"))
                 {
                     <a asp-controller="Test" asp-action="Security" class="@(IsActive("Security") ? "active" : "")"><i class="bi bi-shield-fill-exclamation"></i> Security & Audit</a>
                 }

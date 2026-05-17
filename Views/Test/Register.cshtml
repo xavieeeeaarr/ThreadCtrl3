@@ -1,6 +1,7 @@
 @{
     ViewData["Title"] = "Register";
 }
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 
 
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
@@ -48,12 +49,15 @@
                     </div>
 
                     <div class="form-floating mb-3">
-                        <input type="password" name="password" class="form-control" placeholder="password" autocomplete="new-password" required />
+                        <input type="password" name="password" id="regPassword" class="form-control" placeholder="password" autocomplete="new-password" required />
                         <label class="form-label-black"><i class="bi bi-lock-fill"></i> Password</label>
+                        <div class="password-requirements text-white-50 small mt-1 opacity-75">
+                            Min. 8 chars, must include: <b>A-Z, a-z, 0-9, & symbol</b>
+                        </div>
                     </div>
 
                     <div class="form-floating mb-3">
-                        <input type="password" name="confirmPassword" class="form-control" placeholder="confirm password" autocomplete="new-password" required />
+                        <input type="password" name="confirmPassword" id="confirmPassword" class="form-control" placeholder="confirm password" autocomplete="new-password" required />
                         <label class="form-label-black"><i class="bi bi-lock-fill"></i> Confirm Password</label>
                     </div>
 
@@ -110,6 +114,10 @@
                         </div>
                     </div>
 
+                    <div class="mb-3 d-flex justify-content-center">
+                        <div class="g-recaptcha" data-sitekey="@Configuration["ReCaptcha:SiteKey"]" data-theme="dark"></div>
+                    </div>
+
                     <div class="d-flex gap-2">
                         <button type="button" class="btn btn-lg btn-outline-secondary flex-grow-1" onclick="showStep1()"><i class="bi bi-arrow-left"></i> Back</button>
                         <button type="submit" class="btn btn-lg btn-primary flex-grow-2 px-5">Register</button>
@@ -131,11 +139,14 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <script>
         function showStep2() {
             // Simple validation before going to step 2
             const inputs = document.querySelectorAll('#step1 input[required]');
             let valid = true;
+            
+            // Basic required check
             inputs.forEach(i => {
                 const val = i.value.trim();
                 if(!val) {
@@ -146,10 +157,33 @@
                 }
             });
 
-            if(valid) {
-                document.getElementById('step1').style.display = 'none';
-                document.getElementById('step2').style.display = 'block';
+            if(!valid) return;
+
+            // Password Strength Check
+            const pwd = document.getElementById('regPassword').value;
+            const confirm = document.getElementById('confirmPassword').value;
+            
+            const hasUpper = /[A-Z]/.test(pwd);
+            const hasLower = /[a-z]/.test(pwd);
+            const hasNumber = /[0-9]/.test(pwd);
+            const hasSymbol = /[!@@#$%^&*(),.?":{}|<>]/.test(pwd);
+            const minLength = pwd.length >= 8;
+
+            if(!(hasUpper && hasLower && hasNumber && hasSymbol && minLength)) {
+                alert("Password is too weak! Please follow the requirements: Min 8 chars, A-Z, a-z, 0-9, and a symbol.");
+                document.getElementById('regPassword').classList.add('is-invalid');
+                return;
             }
+
+            if(pwd !== confirm) {
+                alert("Passwords do not match!");
+                document.getElementById('confirmPassword').classList.add('is-invalid');
+                return;
+            }
+
+            // Proceed to Step 2
+            document.getElementById('step1').style.display = 'none';
+            document.getElementById('step2').style.display = 'block';
         }
 
         function showStep1() {

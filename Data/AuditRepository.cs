@@ -42,16 +42,18 @@ namespace ThrdCtrl2.Data
             cmd.ExecuteNonQuery();
         }
 
-        public List<AuditLog> GetLogs(int companyId, int? userId = null, string? module = null, int limit = 100)
+        public List<AuditLog> GetLogs(int companyId, int? userId = null, string? module = null, string? roleName = null, string? actionName = null, int limit = 100)
         {
             var list = new List<AuditLog>();
             using var conn = GetConnection();
             using var cmd = conn.CreateCommand();
             
-            string query = @"SELECT TOP (@Limit) a.LogID, a.CompanyID, a.UserID, u.FullName as UserFullName, 
-                                    a.Action, a.Module, a.Details, a.IPAddress, a.Timestamp
+            string query = @"SELECT TOP (@Limit) a.LogID, a.CompanyID, a.UserID, u.FullName as UserFullName, r.RoleName,
+                                    a.Action, a.Module, a.Details, a.IPAddress, a.Timestamp, c.CompanyName
                              FROM dbo.AuditLogs a
                              LEFT JOIN dbo.Users u ON a.UserID = u.UserID
+                             LEFT JOIN dbo.Roles r ON u.RoleID = r.RoleID
+                             LEFT JOIN dbo.Companies c ON a.CompanyID = c.CompanyID
                              WHERE a.CompanyID = @CompanyID";
             
             if (userId.HasValue)
@@ -63,6 +65,16 @@ namespace ThrdCtrl2.Data
             {
                 query += " AND a.Module = @Module";
                 cmd.Parameters.AddWithValue("@Module", module);
+            }
+            if (!string.IsNullOrEmpty(roleName) && roleName != "All Roles")
+            {
+                query += " AND r.RoleName = @RoleName";
+                cmd.Parameters.AddWithValue("@RoleName", roleName);
+            }
+            if (!string.IsNullOrEmpty(actionName) && actionName != "All Actions")
+            {
+                query += " AND a.Action LIKE @ActionName";
+                cmd.Parameters.AddWithValue("@ActionName", "%" + actionName + "%");
             }
 
             query += " ORDER BY a.Timestamp DESC";
@@ -80,11 +92,64 @@ namespace ThrdCtrl2.Data
                     CompanyID = rdr.IsDBNull(1) ? null : (int?)rdr.GetInt32(1),
                     UserID = rdr.IsDBNull(2) ? null : (int?)rdr.GetInt32(2),
                     UserFullName = rdr.IsDBNull(3) ? "System" : rdr.GetString(3),
-                    Action = rdr.IsDBNull(4) ? null : rdr.GetString(4),
-                    Module = rdr.IsDBNull(5) ? null : rdr.GetString(5),
-                    Details = rdr.IsDBNull(6) ? null : rdr.GetString(6),
-                    IPAddress = rdr.IsDBNull(7) ? null : rdr.GetString(7),
-                    Timestamp = rdr.GetDateTime(8)
+                    RoleName = rdr.IsDBNull(4) ? "System" : rdr.GetString(4),
+                    Action = rdr.IsDBNull(5) ? null : rdr.GetString(5),
+                    Module = rdr.IsDBNull(6) ? null : rdr.GetString(6),
+                    Details = rdr.IsDBNull(7) ? null : rdr.GetString(7),
+                    IPAddress = rdr.IsDBNull(8) ? null : rdr.GetString(8),
+                    Timestamp = rdr.GetDateTime(9),
+                    CompanyName = rdr.IsDBNull(10) ? "N/A" : rdr.GetString(10)
+                });
+            }
+            return list;
+        }
+
+        public List<AuditLog> GetAllSystemLogs(int? companyId = null, string? roleName = null, int limit = 1000)
+        {
+            var list = new List<AuditLog>();
+            using var conn = GetConnection();
+            using var cmd = conn.CreateCommand();
+            
+            string query = @"SELECT TOP (@Limit) a.LogID, a.CompanyID, a.UserID, u.FullName as UserFullName, r.RoleName,
+                                    a.Action, a.Module, a.Details, a.IPAddress, a.Timestamp, c.CompanyName
+                             FROM dbo.AuditLogs a
+                             LEFT JOIN dbo.Users u ON a.UserID = u.UserID
+                             LEFT JOIN dbo.Roles r ON u.RoleID = r.RoleID
+                             LEFT JOIN dbo.Companies c ON a.CompanyID = c.CompanyID
+                             WHERE 1=1";
+            
+            if (companyId.HasValue)
+            {
+                query += " AND a.CompanyID = @CompanyID";
+                cmd.Parameters.AddWithValue("@CompanyID", companyId.Value);
+            }
+            if (!string.IsNullOrEmpty(roleName) && roleName != "All Roles")
+            {
+                query += " AND r.RoleName = @RoleName";
+                cmd.Parameters.AddWithValue("@RoleName", roleName);
+            }
+
+            query += " ORDER BY a.Timestamp DESC";
+            cmd.CommandText = query;
+            cmd.Parameters.AddWithValue("@Limit", limit);
+
+            conn.Open();
+            using var rdr = cmd.ExecuteReader();
+            while (rdr.Read())
+            {
+                list.Add(new AuditLog
+                {
+                    LogID = rdr.GetInt32(0),
+                    CompanyID = rdr.IsDBNull(1) ? null : (int?)rdr.GetInt32(1),
+                    UserID = rdr.IsDBNull(2) ? null : (int?)rdr.GetInt32(2),
+                    UserFullName = rdr.IsDBNull(3) ? "System" : rdr.GetString(3),
+                    RoleName = rdr.IsDBNull(4) ? "System" : rdr.GetString(4),
+                    Action = rdr.IsDBNull(5) ? null : rdr.GetString(5),
+                    Module = rdr.IsDBNull(6) ? null : rdr.GetString(6),
+                    Details = rdr.IsDBNull(7) ? null : rdr.GetString(7),
+                    IPAddress = rdr.IsDBNull(8) ? null : rdr.GetString(8),
+                    Timestamp = rdr.GetDateTime(9),
+                    CompanyName = rdr.IsDBNull(10) ? "N/A" : rdr.GetString(10)
                 });
             }
             return list;

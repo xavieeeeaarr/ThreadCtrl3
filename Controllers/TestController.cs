@@ -20,14 +20,18 @@ namespace ThrdCtrl2.Controllers
 
         private readonly InventoryRepository _inventoryRepo;
         private readonly AuditRepository _auditRepo;
+        private readonly EmailService _emailService;
         private readonly Microsoft.Extensions.Configuration.IConfiguration _config;
+        private readonly ReCaptchaService _reCaptchaService;
 
-        public TestController(UserRepository userRepo, InventoryRepository inventoryRepo, AuditRepository auditRepo, Microsoft.Extensions.Configuration.IConfiguration config)
+        public TestController(UserRepository userRepo, InventoryRepository inventoryRepo, AuditRepository auditRepo, EmailService emailService, Microsoft.Extensions.Configuration.IConfiguration config, ReCaptchaService reCaptchaService)
         {
             _userRepo = userRepo;
             _inventoryRepo = inventoryRepo;
             _auditRepo = auditRepo;
+            _emailService = emailService;
             _config = config;
+            _reCaptchaService = reCaptchaService;
         }
 
         private void LogEvent(string action, string module, string details)
@@ -54,6 +58,37 @@ namespace ThrdCtrl2.Controllers
             return View();
         }
 
+        private bool IsPasswordStrong(string password, out string errorMessage)
+        {
+            errorMessage = "";
+            if (string.IsNullOrWhiteSpace(password) || password.Length < 8)
+            {
+                errorMessage = "Password must be at least 8 characters long.";
+                return false;
+            }
+            if (!password.Any(char.IsUpper))
+            {
+                errorMessage = "Password must contain at least one uppercase letter.";
+                return false;
+            }
+            if (!password.Any(char.IsLower))
+            {
+                errorMessage = "Password must contain at least one lowercase letter.";
+                return false;
+            }
+            if (!password.Any(char.IsDigit))
+            {
+                errorMessage = "Password must contain at least one number.";
+                return false;
+            }
+            if (!password.Any(ch => !char.IsLetterOrDigit(ch)))
+            {
+                errorMessage = "Password must contain at least one special character (symbol).";
+                return false;
+            }
+            return true;
+        }
+
         [Microsoft.AspNetCore.Authorization.AllowAnonymous]
         public IActionResult Login()
         {
@@ -65,13 +100,36 @@ namespace ThrdCtrl2.Controllers
         }
 
         [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+        public IActionResult AccessDenied()
+        {
+            LogEvent("Unauthorized Access", "Security", "User attempted to access a restricted page.");
+            return View();
+        }
+
+        [Microsoft.AspNetCore.Authorization.AllowAnonymous]
         [HttpPost]
         public async System.Threading.Tasks.Task<IActionResult> Login(string email, string password)
         {
+            string captchaResponse = Request.Form["g-recaptcha-response"];
+            var captchaResult = await _reCaptchaService.VerifyWithErrorsAsync(captchaResponse);
+            if (!captchaResult.Success)
+            {
+                ModelState.AddModelError("", $"reCAPTCHA Verification Failed: {captchaResult.ErrorCodes}");
+                return View();
+            }
+
             var user = _userRepo.GetUserByEmail(email);
             if (user == null)
             {
                 ModelState.AddModelError("", "Invalid email or password.");
+                return View();
+            }
+
+            // CHECK LOCKOUT STATUS
+            if (user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTime.Now)
+            {
+                var remainingMinutes = Math.Ceiling((user.LockoutEnd.Value - DateTime.Now).TotalMinutes);
+                ModelState.AddModelError("", $"Your account is temporarily locked due to multiple failed login attempts. Please try again in {remainingMinutes} minutes.");
                 return View();
             }
 
@@ -125,6 +183,9 @@ namespace ThrdCtrl2.Controllers
 
             if (isValid)
             {
+                // Reset failed attempts on success
+                _userRepo.ResetAccessFailedCount(user.UserID);
+
                 if (needsUpgrade)
                 {
                     // Update legacy plain-text password to hash
@@ -132,19 +193,95 @@ namespace ThrdCtrl2.Controllers
                     _userRepo.UpdateUser(user);
                 }
 
-                // Check for Company Status block (Super Admins are exempt)
-                if (user.RoleName != "Super Admin")
+                // Generate and send OTP for Login
+                string otpCode = new Random().Next(100000, 999999).ToString();
+                _userRepo.CreateOTP(user.UserID, otpCode, "Login");
+                
+                try {
+                    await _emailService.SendEmailAsync(user.Email, "Login Verification Code", $"Your verification code is: <b>{otpCode}</b>. It expires in 10 minutes.");
+                } catch {
+                    // Fallback for testing: Show code on screen if email fails
+                    TempData["Message"] = "Email failed (Check SMTP settings). Your code for testing is: " + otpCode;
+                }
+
+                TempData["OTP_UserID"] = user.UserID;
+                TempData["OTP_Type"] = "Login";
+                return RedirectToAction("VerifyOTP");
+            }
+
+            if (user != null)
+            {
+                _userRepo.IncrementAccessFailedCount(user.UserID);
+                int failedCount = user.AccessFailedCount + 1;
+
+                if (failedCount >= 3)
                 {
-                    if (user.CompanyStatus == "Pending")
-                    {
-                        ModelState.AddModelError("", "Your company registration is still pending approval. Please contact support.");
-                        return View();
-                    }
-                    if (user.CompanyStatus == "Inactive")
-                    {
-                        ModelState.AddModelError("", "Your account is restricted. Please contact the system administrator or check your subscription status.");
-                        return View();
-                    }
+                    var lockoutTime = DateTime.Now.AddMinutes(10);
+                    _userRepo.SetLockout(user.UserID, lockoutTime);
+                    
+                    // Send security alert email
+                    try {
+                        await _emailService.SendEmailAsync(user.Email, "Security Alert: Suspicious Login Activity", 
+                            $"Hello {user.FullName},<br/><br/>We detected 3 failed login attempts on your account. For your security, your account has been <b>locked for 10 minutes</b>.<br/><br/>If this wasn't you, we recommend resetting your password immediately.");
+                    } catch { }
+
+                    _auditRepo.Log(new AuditLog { 
+                        CompanyID = user.CompanyID, 
+                        UserID = user.UserID, 
+                        Action = "Lockout", 
+                        Module = "Auth", 
+                        Details = "Account locked for 10 minutes due to 3 failed attempts.", 
+                        IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString() 
+                    });
+
+                    ModelState.AddModelError("", "Too many failed attempts. Your account has been locked for 10 minutes. A security alert has been sent to your email.");
+                    return View();
+                }
+
+                _auditRepo.Log(new AuditLog { CompanyID = user.CompanyID, UserID = user.UserID, Action = "Failed Login", Module = "Auth", Details = $"Invalid password (Attempt {failedCount}/3)", IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString() });
+            }
+
+            ModelState.AddModelError("", "Invalid email or password.");
+            return View();
+        }
+
+        [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+        public IActionResult VerifyOTP()
+        {
+            if (TempData["OTP_UserID"] == null) return RedirectToAction("Login");
+            TempData.Keep();
+            return View();
+        }
+
+        [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+        [HttpPost]
+        public async System.Threading.Tasks.Task<IActionResult> VerifyOTP(string otpCode)
+        {
+            if (TempData["OTP_UserID"] == null) return RedirectToAction("Login");
+            int userId = (int)TempData["OTP_UserID"];
+            string type = (string)TempData["OTP_Type"];
+            TempData.Keep();
+
+            if (_userRepo.VerifyOTP(userId, otpCode, type))
+            {
+                var user = _userRepo.GetUserById(userId);
+                if (user == null) return RedirectToAction("Login");
+
+                // If verifying registration, activate user but do NOT log them in yet
+                if (type == "Register") {
+                    _userRepo.SetUserStatus(userId, "Active");
+                    
+                    _auditRepo.Log(new AuditLog { 
+                        CompanyID = user.CompanyID, 
+                        UserID = user.UserID, 
+                        Action = "Email Verified", 
+                        Module = "Auth", 
+                        Details = "User verified email. Pending Super Admin approval.", 
+                        IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString() 
+                    });
+
+                    TempData["Message"] = "Email verified successfully! Your account is now pending approval by the Super Admin. You will be able to log in once approved.";
+                    return RedirectToAction("Login");
                 }
 
                 var claims = new List<Claim>
@@ -162,24 +299,16 @@ namespace ThrdCtrl2.Controllers
 
                 await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
                 
-                _auditRepo.Log(new AuditLog { CompanyID = user.CompanyID, UserID = user.UserID, Action = "Login", Module = "Auth", Details = "User logged in successfully", IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString() });
+                _auditRepo.Log(new AuditLog { CompanyID = user.CompanyID, UserID = user.UserID, Action = "OTP Verified", Module = "Auth", Details = $"OTP type {type} verified successfully", IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString() });
 
-                if (user.RoleName == "Super Admin")
-                {
-                    return RedirectToAction("SuperAdminDashboard");
-                }
-
+                if (user.RoleName == "Super Admin") return RedirectToAction("SuperAdminDashboard");
                 return RedirectToAction("Dashboard");
             }
 
-            if (user != null)
-            {
-                _auditRepo.Log(new AuditLog { CompanyID = user.CompanyID, UserID = user.UserID, Action = "Failed Login", Module = "Auth", Details = "Invalid password", IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString() });
-            }
-
-            ModelState.AddModelError("", "Invalid email or password.");
+            ModelState.AddModelError("", "Invalid or expired verification code.");
             return View();
         }
+
 
         public async System.Threading.Tasks.Task<IActionResult> Logout()
         {
@@ -199,8 +328,22 @@ namespace ThrdCtrl2.Controllers
 
         [Microsoft.AspNetCore.Authorization.AllowAnonymous]
         [HttpPost]
-        public IActionResult Register(string companyName, string fullName, string email, string password, string confirmPassword, string subscriptionType)
+        public async System.Threading.Tasks.Task<IActionResult> Register(string companyName, string fullName, string email, string password, string confirmPassword, string subscriptionType)
         {
+            string captchaResponse = Request.Form["g-recaptcha-response"];
+            var captchaResult = await _reCaptchaService.VerifyWithErrorsAsync(captchaResponse);
+            if (!captchaResult.Success)
+            {
+                ModelState.AddModelError("", $"reCAPTCHA Verification Failed: {captchaResult.ErrorCodes}");
+                return View();
+            }
+
+            if (!IsPasswordStrong(password, out string pwdError))
+            {
+                ModelState.AddModelError("", pwdError);
+                return View();
+            }
+
             if (password != confirmPassword)
             {
                 ModelState.AddModelError("", "Passwords do not match.");
@@ -229,7 +372,7 @@ namespace ThrdCtrl2.Controllers
                 Email = email,
                 Password = BCrypt.Net.BCrypt.HashPassword(password),
                 RoleID = adminRole.RoleID,
-                Status = "Active"
+                Status = "Pending" // Require OTP to activate
             };
 
             try
@@ -241,11 +384,23 @@ namespace ThrdCtrl2.Controllers
                 newUser.CompanyID = companyId;
                 
                 // 3. Create User
-                _userRepo.CreateUser(newUser);
+                int userId = _userRepo.CreateUser(newUser);
                 
-                _auditRepo.Log(new AuditLog { CompanyID = companyId, UserID = null, Action = "Registration", Module = "Auth", Details = $"New company {companyName} and admin {fullName} registered", IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString() });
+                // 4. Generate and send OTP
+                string otpCode = new Random().Next(100000, 999999).ToString();
+                _userRepo.CreateOTP(userId, otpCode, "Register");
 
-                return RedirectToAction("Login");
+                try {
+                    await _emailService.SendEmailAsync(email, "Welcome to ThreadCtrl - Verify Your Account", $"Welcome! Please verify your account with this code: <b>{otpCode}</b>");
+                } catch {
+                    TempData["Message"] = "Email failed. Your code for testing is: " + otpCode;
+                }
+
+                _auditRepo.Log(new AuditLog { CompanyID = companyId, UserID = userId, Action = "Registration", Module = "Auth", Details = $"New company {companyName} registered. OTP sent.", IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString() });
+
+                TempData["OTP_UserID"] = userId;
+                TempData["OTP_Type"] = "Register";
+                return RedirectToAction("VerifyOTP");
             }
             catch (System.Exception ex)
             {
@@ -253,6 +408,82 @@ namespace ThrdCtrl2.Controllers
                 return View();
             }
         }
+
+        [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+        public IActionResult ForgotPassword() => View();
+
+        [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+        [HttpPost]
+        public async System.Threading.Tasks.Task<IActionResult> ForgotPassword(string email)
+        {
+            var user = _userRepo.GetUserByEmail(email);
+            if (user != null)
+            {
+                string token = Guid.NewGuid().ToString();
+                _userRepo.CreatePasswordResetToken(user.UserID, token);
+                
+                string resetLink = Url.Action("ResetPassword", "Test", new { token }, Request.Scheme) ?? "";
+                
+                try {
+                    await _emailService.SendEmailAsync(email, "Password Reset Request", $"Click <a href='{resetLink}'>here</a> to reset your password. Link expires in 1 hour.");
+                } catch {
+                    TempData["Message"] = "Email failed, but here is your link: " + resetLink;
+                }
+            }
+            
+            ViewBag.Message = "If that email is registered, a reset link has been sent.";
+            return View();
+        }
+
+        [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+        public IActionResult ResetPassword(string token)
+        {
+            var userId = _userRepo.VerifyPasswordResetToken(token);
+            if (userId == null) return RedirectToAction("Login", new { error = "Invalid or expired token" });
+            
+            ViewBag.Token = token;
+            return View();
+        }
+
+        [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+        [HttpPost]
+        public IActionResult ResetPassword(string token, string password, string confirmPassword)
+        {
+            if (!IsPasswordStrong(password, out string pwdError))
+            {
+                ModelState.AddModelError("", pwdError);
+                ViewBag.Token = token;
+                return View();
+            }
+
+            if (password != confirmPassword) {
+                ModelState.AddModelError("", "Passwords do not match.");
+                ViewBag.Token = token;
+                return View();
+            }
+
+            var userId = _userRepo.VerifyPasswordResetToken(token);
+            if (userId == null) return RedirectToAction("Login");
+
+            string hashed = BCrypt.Net.BCrypt.HashPassword(password);
+            _userRepo.UpdatePassword(userId.Value, hashed);
+            _userRepo.MarkTokenAsUsed(token);
+
+            // Log password change
+            var user = _userRepo.GetUserById(userId.Value);
+            _auditRepo.Log(new AuditLog { 
+                CompanyID = user?.CompanyID, 
+                UserID = userId.Value, 
+                Action = "Change Password", 
+                Module = "Auth", 
+                Details = "Password reset via email token", 
+                IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString() 
+            });
+
+            TempData["Message"] = "Password reset successfully. You can now login.";
+            return RedirectToAction("Login");
+        }
+
 
         public IActionResult Dashboard(int page = 1)
         {
@@ -938,16 +1169,41 @@ namespace ThrdCtrl2.Controllers
             return View(vm);
         }
 
-        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Super Admin,Company Admin,Auditor")]
-        public IActionResult Security(int? userId, string? module, int page = 1)
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Super Admin")]
+        public IActionResult GlobalSecurity(int? companyId, string? roleName, int page = 1)
         {
             if (page < 1) page = 1;
-            int pageSize = 15;
+            int pageSize = 20;
+
+            var allLogs = _auditRepo.GetAllSystemLogs(companyId, roleName, 2000);
+            int totalItems = allLogs.Count;
+            int totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+            var pagedLogs = allLogs.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+            var vm = new SecurityViewModel
+            {
+                Logs = pagedLogs,
+                Companies = _userRepo.GetCompanies(),
+                SelectedCompanyId = companyId,
+                SelectedRole = roleName,
+                CurrentPage = page,
+                TotalPages = totalPages,
+                TotalItems = totalItems,
+                PageSize = pageSize
+            };
+
+            return View(vm);
+        }
+
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Super Admin,Company Admin,Auditor")]
+        public IActionResult Security(int? userId, string? module, string? roleName, string? actionName, int page = 1, int pageSize = 15)
+        {
+            if (page < 1) page = 1;
 
             var cidStr = User.FindFirst("CompanyID")?.Value;
             if (int.TryParse(cidStr, out int cid))
             {
-                var allLogs = _auditRepo.GetLogs(cid, userId, module, 1000); // Get more for filtering/summary if needed, or just paged
+                var allLogs = _auditRepo.GetLogs(cid, userId, module, roleName, actionName, 1000); 
                 int totalItems = allLogs.Count;
                 int totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
                 var pagedLogs = allLogs.Skip((page - 1) * pageSize).Take(pageSize).ToList();
@@ -959,6 +1215,8 @@ namespace ThrdCtrl2.Controllers
                     Users = _userRepo.GetAllUsers(null, cid),
                     SelectedUserId = userId,
                     SelectedModule = module,
+                    SelectedRole = roleName,
+                    SelectedAction = actionName,
                     CurrentPage = page,
                     TotalPages = totalPages,
                     TotalItems = totalItems,
@@ -972,13 +1230,13 @@ namespace ThrdCtrl2.Controllers
         }
 
         [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Super Admin,Company Admin,Auditor")]
-        public IActionResult SecurityReport(int? userId, string? module)
+        public IActionResult SecurityReport(int? userId, string? module, string? roleName, string? actionName)
         {
             var cidStr = User.FindFirst("CompanyID")?.Value;
             if (!int.TryParse(cidStr, out int cid)) return RedirectToAction("Login");
 
             // For formal report, we want the logs (up to 2000 for visibility)
-            var allLogs = _auditRepo.GetLogs(cid, userId, module, 2000);
+            var allLogs = _auditRepo.GetLogs(cid, userId, module, roleName, actionName, 2000);
             
             var vm = new SecurityViewModel
             {
@@ -986,7 +1244,9 @@ namespace ThrdCtrl2.Controllers
                 Stats = _auditRepo.GetSecurityStats(cid),
                 Users = _userRepo.GetAllUsers(null, cid),
                 SelectedUserId = userId,
-                SelectedModule = module
+                SelectedModule = module,
+                SelectedRole = roleName,
+                SelectedAction = actionName
             };
 
             ViewData["CompanyName"] = User.FindFirst("CompanyName")?.Value ?? "ThreadCtrl Enterprise";
@@ -999,6 +1259,7 @@ namespace ThrdCtrl2.Controllers
         public IActionResult SuperAdminDashboard()
         {
             var vm = _userRepo.GetSuperAdminDashboardStats();
+            vm.RecentAuditLogs = _auditRepo.GetAllSystemLogs(null, null, 10);
             return View(vm);
         }
 
@@ -1184,6 +1445,17 @@ namespace ThrdCtrl2.Controllers
             catch (Exception ex)
             {
                 return Content("Migration Failed: " + ex.Message);
+            }
+        }
+        [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+        public async System.Threading.Tasks.Task<IActionResult> TestSmtp(string email)
+        {
+            if (string.IsNullOrEmpty(email)) return Content("Please provide an email: /Test/TestSmtp?email=your@email.com");
+            try {
+                await _emailService.SendEmailAsync(email, "SMTP Test", "<h1>Success!</h1><p>Your SMTP settings are working correctly.</p>");
+                return Content("Email sent successfully to " + email);
+            } catch (System.Exception ex) {
+                return Content("Failed to send email: " + ex.Message);
             }
         }
     }

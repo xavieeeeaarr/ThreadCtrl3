@@ -77,6 +77,49 @@
             </div>
         </div>
     </div>
+
+    <!-- Audit Section -->
+    <div class="table-card-big mt-4" style="background: #1a1a1a; padding: 25px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+        <div class="table-header border-bottom border-secondary pb-3 mb-3">
+            <h3 class="mb-0">Live System Audit</h3>
+        </div>
+        <div class="table-responsive">
+            <table class="inventory-table">
+                <thead>
+                    <tr>
+                        <th style="color: #6b7280;">Time</th>
+                        <th style="color: #6b7280;">Company</th>
+                        <th style="color: #6b7280;">User</th>
+                        <th style="color: #6b7280;">Action</th>
+                        <th style="color: #6b7280;">Module</th>
+                        <th style="color: #6b7280;">Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.RecentAuditLogs != null && Model.RecentAuditLogs.Any())
+                    {
+                        foreach (var log in Model.RecentAuditLogs)
+                        {
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td class="small py-3">@log.Timestamp.ToString("HH:mm:ss")</td>
+                                <td class="fw-bold" style="color: #a7d417;">@log.CompanyName</td>
+                                <td>@log.UserFullName</td>
+                                <td class="fw-bold">@log.Action</td>
+                                <td><span class="status-blue">@log.Module</span></td>
+                                <td class="small opacity-75">@log.Details</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-white-50">No recent audit logs.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

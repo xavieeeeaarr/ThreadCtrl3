@@ -12,5 +12,7 @@ namespace ThrdCtrl2.Models
         public string Status { get; set; } = "Active";
         public string? RoleName { get; set; }
         public string? CompanyStatus { get; set; }
+        public int AccessFailedCount { get; set; }
+        public System.DateTime? LockoutEnd { get; set; }
     }
 }
