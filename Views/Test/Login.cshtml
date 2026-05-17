@@ -41,13 +41,13 @@
                 <h1 style="color: white;" class="system-name">@ViewData["Title"] Here!</h1>
 
                 <div class="form-floating mb-3">
-                    <input type="email" name="email" class="form-control" placeholder="name@example.com" autocomplete="off" required />
-                    <label class="form-label-black"><i class="bi bi-envelope-fill"></i> Email</label>
+                    <input type="email" name="email" id="loginEmail" class="form-control" placeholder="name@example.com" autocomplete="off" required />
+                    <label for="loginEmail" class="form-label-black"><i class="bi bi-envelope-fill"></i> Email</label>
                 </div>
 
                 <div class="form-floating mb-3">
-                    <input type="password" name="password" class="form-control" placeholder="password" autocomplete="new-password" required />
-                    <label class="form-label-black"><i class="bi bi-lock-fill"></i> Password</label>
+                    <input type="password" name="password" id="loginPassword" class="form-control" placeholder="password" autocomplete="new-password" required />
+                    <label for="loginPassword" class="form-label-black"><i class="bi bi-lock-fill"></i> Password</label>
                 </div>
 
                 <div class="checkbox mb-3">
